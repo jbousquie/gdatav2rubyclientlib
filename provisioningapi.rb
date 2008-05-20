@@ -1,7 +1,5 @@
 require 'connection'
-require 'rexml/document'
 require 'cgi'
-include REXML
 
 
 class ProvisioningApi
@@ -43,7 +41,7 @@ class ProvisioningApi
   end
   
   def request(object, action, value=nil, header=nil, message=nil)
-  #param value : ce qui est concaténé au path de l'action ex: username
+  #param value : value to be concatenated to action path ex: GET host/path/value
   	method = @action[object][action][:method]
   	value = '' if !value
   	path = @action[object][action][:path]+value
