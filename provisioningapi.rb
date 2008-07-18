@@ -1,5 +1,7 @@
 require 'connection'
 require 'cgi'
+require 'rexml/document'
+include REXML
 
 
 class ProvisioningApi
@@ -15,6 +17,7 @@ class ProvisioningApi
   # proxy_port : (optional) proxy port number (numeric)
   # proxy_user : (optional) login for authenticated proxy only (string)
   # proxy_passwd : (optional) password for authenticated proxy only (string)
+  # The domain name is extracted from the mail param value.
   #
   # Examples
   # standard : no proxy
@@ -45,9 +48,10 @@ class ProvisioningApi
 	return action  	
   end
   
-  # Returns an user object
+  # Returns an UserEntry instance
   def retrieve_user(username)
-	request(:user, :retrieve, username, @headers) 
+	response = request(:user, :retrieve, username, @headers) 
+	user_entry = UserEntry.new response.body
   end
   
   # Sends credentials and returns an authentication token
@@ -67,6 +71,23 @@ class ProvisioningApi
 	@connection.perform(method, path, message, header)
   end
 
+end
+
+# UserEntry object : Google REST API received response relative to an user
+class UserEntry < Document
+attr_reader :given_name, :family_name, :username, :suspended?, :ip_whitelisted?, :admin?, :change_password_at_next_login?, :agreed_to_terms? 
+  def initialize
+    super 
+  	elements.each("entry/apps:name") { |element| @given_name = element.attributes["givenName"]
+									@family_name = element.attributes["familyName"] }
+  	elements.each("entry/apps:login"){ |element| @username = element.attributes["userName"]
+									@suspended? = element.attributes["suspended"]
+									@ip_whitelisted? =  element.attributes["ipWhitelisted"]
+									@admin? = element.attributes["admin"]
+									@change_password_at_next_login? = element.attributes["changePasswordAtNextLogin"]
+									@agreed_to_terms? = element.attributes["agreedToTerms"]
+									 }
+  end
 end
 
 
