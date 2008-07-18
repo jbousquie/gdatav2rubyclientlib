@@ -17,13 +17,16 @@ class Connection
 	@http_connection = conn
   end
   
-  def login(mail, passwd)
+  #####  Refactored in provisioningapi class !
+  # Posts credentials and returns an authentication token
+  #def login(mail, passwd)
   # TODO : faire une remontée des URL dans la classe ProvisioningApi
-	request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
-    res = @http_connection.post('/accounts/ClientLogin',request_body,{'Content-Type'=>'application/x-www-form-urlencoded'})
-    return /^Auth=(.+)$/.match(res.body)[1]
-  end
+  #	request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
+  # res = @http_connection.post('/accounts/ClientLogin',request_body,{'Content-Type'=>'application/x-www-form-urlencoded'})
+  #  return /^Auth=(.+)$/.match(res.body)[1]
+  #end
   
+  # Performs the http request and returns the http response
   def perform(method, path, body=nil, header=nil)
   	req = Net::HTTPGenericRequest.new(method, !body.nil?, true, path)
   	req['Content-Type'] = header['Content-Type'] if header['Content-Type']
