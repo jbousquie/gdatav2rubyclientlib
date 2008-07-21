@@ -47,7 +47,12 @@ class ProvisioningApi
 	action[:user][:retrieve] = { :method => 'GET', :path => path_user+'/' }
 	action[:user][:retrieve_all] = { :method => 'GET', :path => path_user } 
 	action[:user][:update] = { :method => 'PUT', :path => path_user +'/' }
+	action[:user][:delete] = { :method => 'DELETE', :path => path_user +'/' }
+	action[:nickname][:create] = { :method => 'POST', :path =>path_nickname }
 	action[:nickname][:retrieve] = { :method => 'GET', :path =>path_nickname+'/' }
+	action[:nickname][:retrieve_all_for_user] = { :method => 'GET', :path =>path_nickname+'?username=' }
+	action[:nickname][:retrieve_all_in_domain] = { :method => 'GET', :path =>path_nickname }
+	action[:nickname][:delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
 	return action  	
   end
   
@@ -55,6 +60,11 @@ class ProvisioningApi
   def retrieve_user(username)
 	response = request(:user, :retrieve, username, @headers) 
 	user_entry = UserEntry.new response.body
+end
+
+def retrieve_all_users
+	response = request(:user, :retrieve_all,nil,@headers)
+	user_feed = UserFeed.new response.body
 end
 
   # Returns an Nickname instance
@@ -107,4 +117,13 @@ class NicknameEntry < Document
 	  elements.each("entry/apps:login"){ |element| @username = element.attributes["userName"] }
 	  elements.each("entry/apps:nickname") { |element| @nickname = element.attributes["name"] }								
   end	
+end
+
+class UserFeed < Document
+	attr_reader :list
+  def initialize(source)
+	  @list ||= []
+	  super(source)
+	  elements.each("feed/entry"){ |element| @list << element }
+  end
 end
