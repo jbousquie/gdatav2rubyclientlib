@@ -75,7 +75,7 @@ end
 
 # UserEntry object : Google REST API received response relative to an user
 class UserEntry < Document
-attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms 
+attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms, :quota_limit
   def initialize(source)
     super(source)
   	elements.each("entry/apps:name") { |element| @given_name = element.attributes["givenName"]
@@ -85,8 +85,8 @@ attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :
 									@ip_whitelisted =  element.attributes["ipWhitelisted"]
 									@admin = element.attributes["admin"]
 									@change_password_at_next_login = element.attributes["changePasswordAtNextLogin"]
-									@agreed_to_terms = element.attributes["agreedToTerms"]
-									 }
+									@agreed_to_terms = element.attributes["agreedToTerms"] }
+	elements.each("entry/apps:quota") { |element| @quota_limit = element.attributes["limit"] }	
   end
 end
 
