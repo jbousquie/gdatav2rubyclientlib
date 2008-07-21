@@ -27,9 +27,9 @@ class ProvisioningApi
   # authenticated proxy :
   # myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080,'foo','bAr')
   def initialize(mail, passwd, proxy=nil, proxy_port=nil, proxy_user=nil, proxy_passwd=nil)
-    domain = mail.split('@')[1]
-    @action = setup_actions(domain)
-  	conn = Connection.new(@@google_host, @@google_port, proxy, proxy_port, proxy_user, proxy_passwd)
+	domain = mail.split('@')[1]
+	@action = setup_actions(domain)
+	conn = Connection.new(@@google_host, @@google_port, proxy, proxy_port, proxy_user, proxy_passwd)
   	@connection = conn
   	@token = login(mail, passwd)
 	@headers = {'Content-Type'=>'application/atom+xml', 'Authorization'=> 'GoogleLogin auth='+token}
@@ -41,52 +41,52 @@ class ProvisioningApi
 	path_user = '/a/feeds/'+domain+'/user/2.0'
 	path_nickname = '/a/feeds/'+domain+'/nickname/2.0'
 	path_email_list = '/a/feeds/'+domain+'/emailList/2.0'
-	action = Hash.new(Hash.new)
-	action[:domain][:login] = {:method => 'POST', :path => '/accounts/ClientLogin' }
-	action[:user][:create] = { :method => 'POST', :path => path_user }
-	action[:user][:retrieve] = { :method => 'GET', :path => path_user+'/' }
-	action[:user][:retrieve_all] = { :method => 'GET', :path => path_user } 
-	action[:user][:update] = { :method => 'PUT', :path => path_user +'/' }
-	action[:user][:delete] = { :method => 'DELETE', :path => path_user +'/' }
-	action[:nickname][:create] = { :method => 'POST', :path =>path_nickname }
-	action[:nickname][:retrieve] = { :method => 'GET', :path =>path_nickname+'/' }
-	action[:nickname][:retrieve_all_for_user] = { :method => 'GET', :path =>path_nickname+'?username=' }
-	action[:nickname][:retrieve_all_in_domain] = { :method => 'GET', :path =>path_nickname }
-	action[:nickname][:delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
+	action = Hash.new
+	action[:domain_login] = {:method => 'POST', :path => '/accounts/ClientLogin' }
+	action[:user_create] = { :method => 'POST', :path => path_user }
+	action[:user_retrieve] = { :method => 'GET', :path => path_user+'/' }
+	action[:user_retrieve_all] = { :method => 'GET', :path => path_user } 
+	action[:user_update] = { :method => 'PUT', :path => path_user +'/' }
+	action[:user_delete] = { :method => 'DELETE', :path => path_user +'/' }
+	action[:nickname_create] = { :method => 'POST', :path =>path_nickname }
+	action[:nickname_retrieve] = { :method => 'GET', :path =>path_nickname+'/' }
+	action[:nickname_retrieve_all_for_user] = { :method => 'GET', :path =>path_nickname+'?username=' }
+	action[:nickname_retrieve_all_in_domain] = { :method => 'GET', :path =>path_nickname }
+	action[:nickname_delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
 	return action  	
   end
   
   # Returns an UserEntry instance
   def retrieve_user(username)
-	response = request(:user, :retrieve, username, @headers) 
+	response = request(:user_retrieve, username, @headers) 
 	user_entry = UserEntry.new response.body
 end
 
 def retrieve_all_users
-	response = request(:user, :retrieve_all,nil,@headers)
+	response = request(:user_retrieve_all,nil,@headers)
 	user_feed = UserFeed.new response.body
 end
 
   # Returns an Nickname instance
   def retrieve_nickname(nickname)
-	  response =request(:nickname, :retrieve, nickname, @headers)
+	  response =request(:nickname_retrieve, nickname, @headers)
 	  nickname_entry = NicknameEntry.new response.body
   end
   
   # Sends credentials and returns an authentication token
   def login(mail, passwd)
 	request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
-	res = request(:domain, :login, nil, {'Content-Type'=>'application/x-www-form-urlencoded'}, request_body)
+	res = request(:domain_login, nil, {'Content-Type'=>'application/x-www-form-urlencoded'}, request_body)
 	return /^Auth=(.+)$/.match(res.body)[1]
   end
   
   # Perfoms a REST request based on the action hash (cf setup_actions)
   # ex : request (:user, :retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith
-  def request(object, action, value=nil, header=nil, message=nil)
+  def request(action, value=nil, header=nil, message=nil)
   #param value : value to be concatenated to action path ex: GET host/path/value
-  	method = @action[object][action][:method]
+  	method = @action[action][:method]
   	value = '' if !value
-  	path = @action[object][action][:path]+value
+  	path = @action[action][:path]+value
 	@connection.perform(method, path, message, header)
   end
 
