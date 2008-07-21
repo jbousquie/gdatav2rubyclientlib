@@ -38,13 +38,16 @@ class ProvisioningApi
   
   # Associates methods, http verbs and URL for REST access
   def setup_actions(domain)
-	path = '/a/feeds/'+domain+'/user/2.0'
+	path_user = '/a/feeds/'+domain+'/user/2.0'
+	path_nickname = '/a/feeds/'+domain+'/nickname/2.0'
+	path_email_list = '/a/feeds/'+domain+'/emailList/2.0'
 	action = Hash.new(Hash.new)
 	action[:domain][:login] = {:method => 'POST', :path => '/accounts/ClientLogin' }
-	action[:user][:create] = { :method => 'POST', :path => path }
-	action[:user][:retrieve] = { :method => 'GET', :path => path+'/' }
-	action[:user][:retrieve_all] = { :method => 'GET', :path => path } 
-	action[:user][:update] = { :method => 'PUT', :path => path +'/' }
+	action[:user][:create] = { :method => 'POST', :path => path_user }
+	action[:user][:retrieve] = { :method => 'GET', :path => path_user+'/' }
+	action[:user][:retrieve_all] = { :method => 'GET', :path => path_user } 
+	action[:user][:update] = { :method => 'PUT', :path => path_user +'/' }
+	action[:nickname][:retrieve] = { :method => 'GET', :path =>path_nickname+'/' }
 	return action  	
   end
   
@@ -52,6 +55,12 @@ class ProvisioningApi
   def retrieve_user(username)
 	response = request(:user, :retrieve, username, @headers) 
 	user_entry = UserEntry.new response.body
+end
+
+  # Returns an Nickname instance
+  def retrieve_nickname(nickname)
+	  response =request(:nickname, :retrieve, nickname, @headers)
+	  nickname_entry = NicknameEntry.new response.body
   end
   
   # Sends credentials and returns an authentication token
@@ -90,4 +99,12 @@ attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :
   end
 end
 
-
+# NicknameEntry object : Google REST API received response relative to a nickname
+class NicknameEntry < Document
+  attr_reader :nickname, :username
+  def initialize(source)
+	  super(source)
+	  elements.each("entry/apps:login"){ |element| @username = element.attributes["userName"] }
+	  elements.each("entry/apps:nickname") { |element| @nickname = element.attributes["name"] }								
+  end	
+end
