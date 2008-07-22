@@ -59,63 +59,64 @@ class ProvisioningApi
   # Returns an UserEntry instance
   def retrieve_user(username)
 	response = request(:user_retrieve, username, @headers) 
-	user_entry = UserEntry.new response.body
-end
+	user_entry = UserEntry.new(response.elements["entry"])
+  end
 
 def retrieve_all_users
 	response = request(:user_retrieve_all,nil,@headers)
-	user_feed = UserFeed.new response.body
+	user_feed = UserFeed.new response
 end
 
   # Returns an Nickname instance
   def retrieve_nickname(nickname)
 	  response =request(:nickname_retrieve, nickname, @headers)
-	  nickname_entry = NicknameEntry.new response.body
+	  nickname_entry = NicknameEntry.new(response.elements["entry"])
   end
   
   # Sends credentials and returns an authentication token
   def login(mail, passwd)
 	request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
 	res = request(:domain_login, nil, {'Content-Type'=>'application/x-www-form-urlencoded'}, request_body)
-	return /^Auth=(.+)$/.match(res.body)[1]
+	return /^Auth=(.+)$/.match(res.to_s)[1]
+	# res.to_s needed, because res.class = REXML::Document
   end
   
   # Perfoms a REST request based on the action hash (cf setup_actions)
-  # ex : request (:user, :retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith
+  # ex : request (:user_retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith
+  # returns  REXML Document
   def request(action, value=nil, header=nil, message=nil)
   #param value : value to be concatenated to action path ex: GET host/path/value
   	method = @action[action][:method]
   	value = '' if !value
   	path = @action[action][:path]+value
-	@connection.perform(method, path, message, header)
+	response = @connection.perform(method, path, message, header)
+	return Document.new(response.body)
   end
 
 end
 
 # UserEntry object : Google REST API received response relative to an user
-class UserEntry < Document
+class UserEntry 
 attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms, :quota_limit
-  def initialize(source)
-    super(source)
-  	elements.each("entry/apps:name") { |element| @given_name = element.attributes["givenName"]
-									@family_name = element.attributes["familyName"] }
-  	elements.each("entry/apps:login"){ |element| @username = element.attributes["userName"]
-									@suspended = element.attributes["suspended"]
-									@ip_whitelisted =  element.attributes["ipWhitelisted"]
-									@admin = element.attributes["admin"]
-									@change_password_at_next_login = element.attributes["changePasswordAtNextLogin"]
-									@agreed_to_terms = element.attributes["agreedToTerms"] }
-	elements.each("entry/apps:quota") { |element| @quota_limit = element.attributes["limit"] }	
+  def initialize(entry)
+	@family_name = entry.elements["apps:name"].attributes["familyName"]
+	@given_name = entry.elements["apps:name"].attributes["givenName"]
+	@username = entry.elements["apps:login"].attributes["userName"]
+	@suspended = entry.elements["apps:login"].attributes["suspended"]
+	@ip_whitelisted = entry.elements["apps:login"].attributes["ipWhitelisted"]
+	@admin = entry.elements["apps:login"].attributes["admin"]
+	@change_password_at_next_login = entry.elements["apps:login"].attributes["changePasswordAtNextLogin"]
+	@agreed_to_terms = entry.elements["apps:login"].attributes["agreedToTerms"]
+	@quota_limit = entry.elements["apps:quota"].attributes["limit"]
   end
 end
 
 # NicknameEntry object : Google REST API received response relative to a nickname
-class NicknameEntry < Document
+class NicknameEntry 
   attr_reader :nickname, :username
-  def initialize(source)
-	  super(source)
-	  elements.each("entry/apps:login"){ |element| @username = element.attributes["userName"] }
-	  elements.each("entry/apps:nickname") { |element| @nickname = element.attributes["name"] }								
+  def initialize(entry)
+	entry.elements.each("apps:login"){ |element| @username = element.attributes["userName"] }
+	entry.elements.each("apps:nickname") { |element| @nickname = element.attributes["name"] }								
   end	
 end
 
@@ -124,6 +125,6 @@ class UserFeed < Document
   def initialize(source)
 	  @list ||= []
 	  super(source)
-	  elements.each("feed/entry"){ |element| @list << element }
+	  elements.each("feed/entry"){ |element|  puts element.attributes.each {|name, value|  puts name+" : "+value} }
   end
 end
