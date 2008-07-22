@@ -64,7 +64,7 @@ class ProvisioningApi
 
 def retrieve_all_users
 	response = request(:user_retrieve_all,nil,@headers)
-	user_feed = UserFeed.new response
+	user_feed = UserFeed.new(response.elements["feed"])
 end
 
   # Returns an Nickname instance
@@ -95,9 +95,10 @@ end
 
 end
 
-# UserEntry object : Google REST API received response relative to an user
+# UserEntry object
 class UserEntry 
 attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms, :quota_limit
+  # UserEntry constructor. Needs a REXML::Element "entry" as parameter
   def initialize(entry)
 	@family_name = entry.elements["apps:name"].attributes["familyName"]
 	@given_name = entry.elements["apps:name"].attributes["givenName"]
@@ -111,20 +112,19 @@ attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :
   end
 end
 
-# NicknameEntry object : Google REST API received response relative to a nickname
+# NicknameEntry object 
 class NicknameEntry 
   attr_reader :nickname, :username
+    # NicknameEntry constructor. Needs a REXML::Element "entry" as parameter
   def initialize(entry)
-	entry.elements.each("apps:login"){ |element| @username = element.attributes["userName"] }
-	entry.elements.each("apps:nickname") { |element| @nickname = element.attributes["name"] }								
+	@username = entry.elements["apps:nickname"].attributes["userName"]
   end	
 end
 
-class UserFeed < Document
-	attr_reader :list
-  def initialize(source)
-	  @list ||= []
-	  super(source)
-	  elements.each("feed/entry"){ |element|  puts element.attributes.each {|name, value|  puts name+" : "+value} }
+# UserFeed object : Array populated with UserEntry objects
+class UserFeed < Array
+  # UserFeed constructor. Needs a REXML::Element "feed"as parameter
+  def initialize(feed)
+	   feed.elements.each("entry"){ |entry| self << UserEntry.new(entry) }
   end
 end
