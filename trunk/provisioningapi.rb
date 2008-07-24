@@ -55,61 +55,106 @@ class ProvisioningApi
 	action[:nickname_delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
 	action[:email_list_retrieve_for_an_email] = { :method => 'GET', :path =>path_email_list+'?recipient=' }
 	action[:email_list_retrieve_in_domain] = { :method => 'GET', :path =>path_email_list }
+	action[:subscription_retrieve] = {:method => 'GET', :path =>path_email_list+'/'}
 	
 	# special action "next" for linked feed results. :path will be affected with URL received in a link tag.
 	action[:next] = {:method => 'GET', :path =>nil }
 	return action  	
   end
   
-  # Returns an UserEntry instance
+  # Returns an UserEntry instance from an username
+  # ex :	user = myapps.retrieve_user('jsmith')
+  #		puts "givenName : "+user.given_name
+  #		puts "familyName : "+user.family_name
   def retrieve_user(username)
 	xml_response = request(:user_retrieve, username, @headers) 
 	user_entry = UserEntry.new(xml_response.elements["entry"])
   end
-
+ 
+  # Returns an UserEntry Array populated with all the users in the domain
+  # ex : 	list= myapps.retrieve_all_users
+  #		list.each{ |user| puts user.username} 
+  #		puts 'nb users : ',list.size
   def retrieve_all_users
 	response = request(:user_retrieve_all,nil,@headers)
 	user_feed = Feed.new(response.elements["feed"],  UserEntry)
-	user_feed = add_next_feeds(user_feed, response)
+	user_feed = add_next_feeds(user_feed, response, UserEntry)
+end
+
+  # Returns an UserEntry Array populated with 100 users, starting from an username
+  # ex : 	list= myapps.retrieve_page_of_users("jsmtih")
+  #  		list.each{ |user| puts user.username}
+  def retrieve_page_of_users(start_username)
+	 param='?startUsername='+start_username
+	response = request(:user_retrieve_all,nil,@headers)
+	user_feed = Feed.new(response.elements["feed"],  UserEntry)
   end
 
-  def add_next_feeds(current_feed, xml_content)
+  def add_next_feeds(current_feed, xml_content,element_class)
 	  xml_content.elements.each("feed/link") {|link|
 		if link.attributes["rel"] == "next"
 			@action[:next] = {:method => 'GET', :path=> link.attributes["href"]}
 			next_response = request(:next,nil,@headers)
-			#current_feed.add_xml_entries(next_response.elements["feed"], UserEntry)
-			current_feed.concat(Feed.new(next_response.elements["feed"], UserEntry))
-			current_feed = add_next_feeds(current_feed, next_response)
+			current_feed.concat(Feed.new(next_response.elements["feed"], element_class))
+			current_feed = add_next_feeds(current_feed, next_response, element_class)
 			end
 		}
 	return current_feed
   end
 
-  # Returns an Nickname instance
+  # Returns a Nickname instance
+  # ex : nick = myapps.retrieve('joe')
+  #        puts nick.login 	=> jsmith
   def retrieve_nickname(nickname)
 	  xml_response = request(:nickname_retrieve, nickname, @headers)
 	  nickname_entry = NicknameEntry.new(xml_response.elements["entry"])
   end
   
+  # Returns a Nickname object array from an username
+  # ex : lists jsmith's nicknames
+  #       mynicks = myapps.retrieve('jsmith')
+  #       mynicks.each {|nick| puts nick.nickname }
   def retrieve_nicknames(username)
 	  xml_response = request(:nickname_retrieve_all_for_user, username, @headers)
 	  nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
+	  nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
   end
   
+  # Returns a Nickname object array for the whole domain
+  # 	allnicks = myapps.retrieve_all_nicknames
+  # 	allnicks.each {|nick| puts nick.nickname }
   def retrieve_all_nicknames
 	  xml_response = request(:nickname_retrieve_all_in_domain, nil, @headers)
 	  nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
+  	  nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
   end
   
+  # Returns an Email_list Array from an email adress
+  # ex :	mylists = myapps.retrieve_email_lists('username@mydomain.com')
+  # 		mylists.each {|list| puts list.email_list }
   def retrieve_email_lists(email_adress)
 	  xml_response = request(:email_list_retrieve_for_an_email, email_adress, @headers)
-	  nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
+	  email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
+  	  email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
   end	  
-
+  
+  # Returns an Email_list Array for the whole domain
+  # ex :	all_lists = myapps.retrieve_all_email_lists
+  # 		all_lists.each {|list| puts list.email_list }
   def retrieve_all_email_lists
 	  xml_response = request(:email_list_retrieve_in_domain, nil, @headers)
-	  nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
+	  email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
+    	  email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
+  end
+  
+  # Returns an Email_list_recipient Array from an email list
+  # ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
+  # 		recipients.each {|recipient| puts recipient.email }
+  def retrieve_all_recipients(email_list)
+	  param = email_list+'/recipient/'
+  	  xml_response = request(:subscription_retrieve, param, @headers)
+	  email_list_recipient_feed = Feed.new(xml_response.elements["feed"],  EmailListRecipientEntry) 
+	  email_list_recipient_feed = add_next_feeds(email_list_recipient_feed, xml_response, EmailListRecipientEntry)
   end
   
   # Sends credentials and returns an authentication token
@@ -172,9 +217,17 @@ class EmailListEntry
   end	
 end
 
-# UserFeed object : Array populated with UserEntry objects
+# EmailListRecipientEntry object 
+class EmailListRecipientEntry 
+  attr_reader :email
+  # EmailListEntry constructor. Needs a REXML::Element "entry" as parameter
+  def initialize(entry)
+	@email = entry.elements["gd:who"].attributes["email"]
+  end	
+end
+# UserFeed object : Array populated with Element_class objects
 class Feed < Array
-  # UserFeed constructor. Populates an array with Entry_class objects. Each object is an xml "entry" parsed from the REXML::Element "feed".
+  # UserFeed constructor. Populates an array with Element_class objects. Each object is an xml "entry" parsed from the REXML::Element "feed".
   # Ex : user_feed = Feed.new(xml_feed, UserEntry)
   #	    nickname_feed = Feed.new(xml_feed, NicknameEntry
   def initialize(xml_feed, element_class)
