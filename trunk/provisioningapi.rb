@@ -56,9 +56,10 @@ class ProvisioningApi
 	action[:email_list_retrieve_for_an_email] = { :method => 'GET', :path =>path_email_list+'?recipient=' }
 	action[:email_list_retrieve_in_domain] = { :method => 'GET', :path =>path_email_list }
 	action[:email_list_create] = { :method => 'POST', :path =>path_email_list }
+	action[:email_list_delete] = { :method => 'DELETE', :path =>path_email_list+'/' }
 	action[:subscription_retrieve] = {:method => 'GET', :path =>path_email_list+'/'}
 	action[:subscription_add] = {:method => 'POST', :path =>path_email_list+'/'}
-	
+	action[:subscription_remove] = {:method => 'DELETE', :path =>path_email_list+'/'}
 	
 	# special action "next" for linked feed results. :path will be affected with URL received in a link tag.
 	action[:next] = {:method => 'GET', :path =>nil }
@@ -115,7 +116,24 @@ end
 	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
 	  response  = request(:user_update,username,@headers, msg.to_s)
   end
+  
+  def suspend_user(username)
+	  msg = RequestMessage.new
+	  msg.about_login(username,nil,nil,nil,"true")
+	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
+	  response  = request(:user_update,username,@headers, msg.to_s)
+  end
+  
+  def restore_user(username)
+	  msg = RequestMessage.new
+	  msg.about_login(username,nil,nil,nil,"false")
+	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
+	  response  = request(:user_update,username,@headers, msg.to_s)
+  end
 
+  def delete_user(username)
+  	  response  = request(:user_delete,username,@headers)
+  end
 
   # Returns a Nickname instance
   # ex : nick = myapps.retrieve('joe')
@@ -149,6 +167,10 @@ end
 	  msg.about_login(username)
 	  msg.about_nickname(nickname)
 	  response  = request(:nickname_create,nil,@headers, msg.to_s)
+  end
+  
+  def delete_nickname(nickname)
+  	  response  = request(:nickname_delete,nickname,@headers)
   end
   
   # Returns an NicknameEntry Array populated with 100 nicknames, starting from an nickname
@@ -194,6 +216,10 @@ end
 	  response  = request(:email_list_create,nil,@headers, msg.to_s)
   end
   
+  def delete_email_list(name)
+  	  response  = request(:email_list_delete,name,@headers)
+  end
+  
   # Returns an Email_list_recipient Array from an email list
   # ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
   # 		recipients.each {|recipient| puts recipient.email }
@@ -218,6 +244,10 @@ end
 	  msg.about_email_list(email_list)
 	  msg.about_who(address)
 	  response  = request(:subscription_add, email_list+'/recipient/',@headers, msg.to_s)
+  end
+  
+  def remove_address_from_email_list(address,email_list)
+  	  response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
   end
   
   # protected methods
