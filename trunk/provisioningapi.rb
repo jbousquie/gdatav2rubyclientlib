@@ -86,21 +86,11 @@ end
   #  		list.each{ |user| puts user.username}
   def retrieve_page_of_users(start_username)
 	 param='?startUsername='+start_username
-	response = request(:user_retrieve_all,nil,@headers)
+	response = request(:user_retrieve_all,param,@headers)
 	user_feed = Feed.new(response.elements["feed"],  UserEntry)
   end
 
-  def add_next_feeds(current_feed, xml_content,element_class)
-	  xml_content.elements.each("feed/link") {|link|
-		if link.attributes["rel"] == "next"
-			@action[:next] = {:method => 'GET', :path=> link.attributes["href"]}
-			next_response = request(:next,nil,@headers)
-			current_feed.concat(Feed.new(next_response.elements["feed"], element_class))
-			current_feed = add_next_feeds(current_feed, next_response, element_class)
-			end
-		}
-	return current_feed
-  end
+
 
   # Returns a Nickname instance
   # ex : nick = myapps.retrieve('joe')
@@ -129,8 +119,17 @@ end
   	  nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
   end
   
+  # Returns an NicknameEntry Array populated with 100 nicknames, starting from an nickname
+  # ex : 	list= myapps.retrieve_page_of_nicknames("joe")
+  #  		list.each{ |nick| puts nick.login}
+  def retrieve_page_of_nicknames(start_nickname)
+	  param='?startNickname='+start_nickname
+	  xml_response = request(:nickname_retrieve_all_in_domain, param, @headers)
+	  nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
+  end
+  
   # Returns an Email_list Array from an email adress
-  # ex :	mylists = myapps.retrieve_email_lists('username@mydomain.com')
+  # ex :	mylists = myapps.retrieve_email_lists('jsmith')   <= you could search from 'jsmith@mydomain.com' too 
   # 		mylists.each {|list| puts list.email_list }
   def retrieve_email_lists(email_adress)
 	  xml_response = request(:email_list_retrieve_for_an_email, email_adress, @headers)
@@ -147,6 +146,16 @@ end
     	  email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
   end
   
+  # Returns an EmailListEntry Array populated with 100 email lists, starting from an email list name
+  # Startinf email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomaine.com".
+  # ex : 	list= myapps.retrieve_page_of_email_lists("mylist") 
+  #  		list.each{ |entry| puts entry.email_list}
+  def retrieve_page_of_email_lists(start_listname)
+	  param='?startEmailListName='+start_listname
+	  xml_response = request(:email_list_retrieve_in_domain, param, @headers)
+	  nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry)
+  end
+  
   # Returns an Email_list_recipient Array from an email list
   # ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
   # 		recipients.each {|recipient| puts recipient.email }
@@ -157,6 +166,18 @@ end
 	  email_list_recipient_feed = add_next_feeds(email_list_recipient_feed, xml_response, EmailListRecipientEntry)
   end
   
+  # Returns an EmailListRecipientEntry Array populated with 100 recipients of an email list, starting from an recipient name
+  # ex : 	list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
+  #  		list.each{ |recipient| puts recipient.email}
+  def retrieve_page_of_recipients(email_list, start_recipient)
+	   param = email_list+'/recipient/?startRecipient='+start_recipient
+	  xml_response = request(:subscription_retrieve, param, @headers)
+	  recipients_feed = Feed.new(xml_response.elements["feed"], EmailListRecipientEntry)
+  end
+  
+  # protected methods
+  protected
+  
   # Sends credentials and returns an authentication token
   def login(mail, passwd)
 	request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
@@ -165,6 +186,20 @@ end
 	# res.to_s needed, because res.class = REXML::Document
   end
   
+
+ # Completes the feed by following et requesting the URL links
+  def add_next_feeds(current_feed, xml_content,element_class)
+	  xml_content.elements.each("feed/link") {|link|
+		if link.attributes["rel"] == "next"
+			@action[:next] = {:method => 'GET', :path=> link.attributes["href"]}
+			next_response = request(:next,nil,@headers)
+			current_feed.concat(Feed.new(next_response.elements["feed"], element_class))
+			current_feed = add_next_feeds(current_feed, next_response, element_class)
+			end
+		}
+	return current_feed
+  end
+
   # Perfoms a REST request based on the action hash (cf setup_actions)
   # ex : request (:user_retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith
   # returns  REXML Document
@@ -225,6 +260,7 @@ class EmailListRecipientEntry
 	@email = entry.elements["gd:who"].attributes["email"]
   end	
 end
+
 # UserFeed object : Array populated with Element_class objects
 class Feed < Array
   # UserFeed constructor. Populates an array with Element_class objects. Each object is an xml "entry" parsed from the REXML::Element "feed".
@@ -234,4 +270,37 @@ class Feed < Array
 	  xml_feed.elements.each("entry"){ |entry| self << element_class.new(entry) }
    end
    
+end
+
+class Request < Document
+  # Request message constructor.
+  # parameter type : "user", "nickname" or "emailList"  
+  def initialize
+	 super '<?xml version="1.0" encoding="UTF-8"?>' 
+	 self.add_element "atom:entry"
+	 self.elements["atom:entry"].add_element "atom:category", {"scheme" => "http://schemas.google.com/g/2005#kind"}
+ end
+ 
+  def add_path(url)
+	 self.elements["atom:entry"].add_element "atom:id"
+	 self.elements["atom:entry/atom:id"].text = url
+ end
+ 
+   def about_email_list(email_list)
+     	 self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#emailList")
+	 self.elements["atom:entry"].add_element "apps:emailList", {"name" => email_list } 
+  end
+ 
+  # warning :  if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
+  def about_login(user_name, passwd=nil, hash_function_name=nil, admin=nil, suspended=nil, change_passwd_at_next_login=nil)
+       	 self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
+	 self.elements["atom:entry"].add_element "apps:login", {"userName", user_name } 
+	 self.elements["atom:entry/apps:login"].add_attribute("password", passwd) if passwd
+	 self.elements["atom:entry/apps:login"].add_attribute("hashFunctionName", hash_function_name) if hash_function_name
+	 self.elements["atom:entry/apps:login"].add_attribute("admin", admin) if admin.nil?
+	 self.elements["atom:entry/apps:login"].add_attribute("suspended", suspended) if not suspended.nil?
+	 self.elements["atom:entry/apps:login"].add_attribute("changePasswordAtNextLogin", change_passwd_at_next_login) if change_passwd_at_next_login.nil?
+  end
+
+  
 end
