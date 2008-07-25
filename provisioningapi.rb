@@ -55,7 +55,10 @@ class ProvisioningApi
 	action[:nickname_delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
 	action[:email_list_retrieve_for_an_email] = { :method => 'GET', :path =>path_email_list+'?recipient=' }
 	action[:email_list_retrieve_in_domain] = { :method => 'GET', :path =>path_email_list }
+	action[:email_list_create] = { :method => 'POST', :path =>path_email_list }
 	action[:subscription_retrieve] = {:method => 'GET', :path =>path_email_list+'/'}
+	action[:subscription_add] = {:method => 'POST', :path =>path_email_list+'/'}
+	
 	
 	# special action "next" for linked feed results. :path will be affected with URL received in a link tag.
 	action[:next] = {:method => 'GET', :path =>nil }
@@ -89,7 +92,14 @@ end
 	response = request(:user_retrieve_all,param,@headers)
 	user_feed = Feed.new(response.elements["feed"],  UserEntry)
   end
-
+ 
+  def create_user(username, given_name, family_name, password, passwd_hash_function=nil, quota=nil)
+	  msg = RequestMessage.new
+	  msg.about_login(username,password,passwd_hash_function,"false","false", "true")
+	  msg.about_name(family_name, given_name)
+	  msg.about_quota(quota) if quota
+	  response  = request(:user_create,nil,@headers, msg.to_s)
+  end
 
 
   # Returns a Nickname instance
@@ -117,6 +127,13 @@ end
 	  xml_response = request(:nickname_retrieve_all_in_domain, nil, @headers)
 	  nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
   	  nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
+  end
+  
+  def create_nickname(username,nickname)
+	  msg = RequestMessage.new
+	  msg.about_login(username)
+	  msg.about_nickname(nickname)
+	  response  = request(:nickname_create,nil,@headers, msg.to_s)
   end
   
   # Returns an NicknameEntry Array populated with 100 nicknames, starting from an nickname
@@ -156,6 +173,12 @@ end
 	  nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry)
   end
   
+  def create_email_list(name)
+	  msg = RequestMessage.new
+	  msg.about_email_list(name)
+	  response  = request(:email_list_create,nil,@headers, msg.to_s)
+  end
+  
   # Returns an Email_list_recipient Array from an email list
   # ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
   # 		recipients.each {|recipient| puts recipient.email }
@@ -173,6 +196,13 @@ end
 	   param = email_list+'/recipient/?startRecipient='+start_recipient
 	  xml_response = request(:subscription_retrieve, param, @headers)
 	  recipients_feed = Feed.new(xml_response.elements["feed"], EmailListRecipientEntry)
+  end
+  
+  def add_address_to_email_list(email_list,address)
+	  msg = RequestMessage.new
+	  msg.about_email_list(email_list)
+	  msg.about_who(address)
+	  response  = request(:subscription_add, email_list+'/recipient/',@headers, msg.to_s)
   end
   
   # protected methods
@@ -272,12 +302,14 @@ class Feed < Array
    
 end
 
-class Request < Document
+class RequestMessage < Document
   # Request message constructor.
   # parameter type : "user", "nickname" or "emailList"  
   def initialize
 	 super '<?xml version="1.0" encoding="UTF-8"?>' 
-	 self.add_element "atom:entry"
+	 self.add_element "atom:entry", {"xmlns:apps" => "http://schemas.google.com/apps/2006",
+								"xmlns:gd" => "http://schemas.google.com/g/2005",
+								"xmlns:atom" => "http://www.w3.org/2005/Atom"}
 	 self.elements["atom:entry"].add_element "atom:category", {"scheme" => "http://schemas.google.com/g/2005#kind"}
  end
  
@@ -292,15 +324,40 @@ class Request < Document
   end
  
   # warning :  if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
+  # when needed to construct the message, should always been used before other "about_" methods so that the category tag can be overwritten
+  # only values permitted for hash_function_function_name : "SHA-1" or nil
   def about_login(user_name, passwd=nil, hash_function_name=nil, admin=nil, suspended=nil, change_passwd_at_next_login=nil)
        	 self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
-	 self.elements["atom:entry"].add_element "apps:login", {"userName", user_name } 
-	 self.elements["atom:entry/apps:login"].add_attribute("password", passwd) if passwd
-	 self.elements["atom:entry/apps:login"].add_attribute("hashFunctionName", hash_function_name) if hash_function_name
-	 self.elements["atom:entry/apps:login"].add_attribute("admin", admin) if admin.nil?
+	 self.elements["atom:entry"].add_element "apps:login", {"userName" => user_name } 
+	 self.elements["atom:entry/apps:login"].add_attribute("password", passwd) if not passwd.nil?
+	 self.elements["atom:entry/apps:login"].add_attribute("hashFunctionName", hash_function_name) if not hash_function_name.nil?
+	 self.elements["atom:entry/apps:login"].add_attribute("admin", admin) if not admin.nil?
 	 self.elements["atom:entry/apps:login"].add_attribute("suspended", suspended) if not suspended.nil?
-	 self.elements["atom:entry/apps:login"].add_attribute("changePasswordAtNextLogin", change_passwd_at_next_login) if change_passwd_at_next_login.nil?
-  end
+	 self.elements["atom:entry/apps:login"].add_attribute("changePasswordAtNextLogin", change_passwd_at_next_login) if not change_passwd_at_next_login.nil?
+ 	 return self
+   end
+   
+   # limit in MB: integer
+  def about_quota(limit)
+	 self.elements["atom:entry"].add_element "apps:quota", {"limit" => limit }  
+	 return self
+  end	   
+ 
+   def about_name(family_name, given_name)
+	 self.elements["atom:entry"].add_element "apps:name", {"familyName" => family_name, "givenName" => given_name } 
+	 return self
+   end
 
+  def about_nickname(name)
+       	 self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#nickname")
+	 self.elements["atom:entry"].add_element "apps:nickname", {"name" => name} 
+ 	 return self
+   end
+ 
+  def about_who(email)
+	 self.elements["atom:entry"].add_element "gd:who", {"email" => email } 
+ 	 return self
+  end
+  
   
 end
