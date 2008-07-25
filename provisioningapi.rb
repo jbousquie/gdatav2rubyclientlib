@@ -100,6 +100,21 @@ end
 	  msg.about_quota(quota) if quota
 	  response  = request(:user_create,nil,@headers, msg.to_s)
   end
+  
+  # params values
+  # passwd_hash_function :  string "SHA-1" or nil
+  # admin :  string "true" or string "false" or nil (no boolean : true or false)
+  # suspended :  string "true" or string "false" or nil (no boolean : true or false)
+  # change_passwd :  string "true" or string "false" or nil (no boolean : true or false)
+  # quota : limit en MB, ex :  string "2048"
+  def update_user(username, given_name, family_name, password=nil, passwd_hash_function=nil, admin=nil, suspended=nil, changepasswd=nil, quota=nil)
+	  msg = RequestMessage.new
+	  msg.about_login(username,password,passwd_hash_function,admin,suspended, changepasswd)
+	  msg.about_name(family_name, given_name)
+	  msg.about_quota(quota) if quota
+	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
+	  response  = request(:user_update,username,@headers, msg.to_s)
+  end
 
 
   # Returns a Nickname instance
