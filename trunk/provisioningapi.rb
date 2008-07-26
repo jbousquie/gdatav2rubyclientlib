@@ -26,20 +26,33 @@ class ProvisioningApi
 
 
   # Creates a new ProvisioningApi object
+  #
   # mail : Google Apps domain administrator e-mail (string)
+  #
   # passwd : Google Apps domain administrator password (string)
+  #
   # proxy : (optional) host name, or IP, of the proxy (string)
+  #
   # proxy_port : (optional) proxy port number (numeric)
+  #
   # proxy_user : (optional) login for authenticated proxy only (string)
+  #
   # proxy_passwd : (optional) password for authenticated proxy only (string)
+  #
   # The domain name is extracted from the mail param value.
   #
   # Examples
+  #
   # standard : no proxy
+  #
   # myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+  #
   # proxy :
+  #
   # myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080)
+  #
   # authenticated proxy :
+  #
   # myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080,'foo','bAr')
   def initialize(mail, passwd, proxy=nil, proxy_port=nil, proxy_user=nil, proxy_passwd=nil)
 	domain = mail.split('@')[1]
@@ -82,8 +95,11 @@ class ProvisioningApi
   end
   
   # Returns an UserEntry instance from an username
+  #
   # ex :	user = myapps.retrieve_user('jsmith')
+  #
   #		puts "givenName : "+user.given_name
+  #
   #		puts "familyName : "+user.family_name
   def retrieve_user(username)
 	xml_response = request(:user_retrieve, username, @headers) 
@@ -91,8 +107,11 @@ class ProvisioningApi
   end
  
   # Returns an UserEntry Array populated with all the users in the domain
+  #
   # ex : 	list= myapps.retrieve_all_users
+  #
   #		list.each{ |user| puts user.username} 
+  #
   #		puts 'nb users : ',list.size
   def retrieve_all_users
 	response = request(:user_retrieve_all,nil,@headers)
@@ -101,7 +120,9 @@ class ProvisioningApi
 end
 
   # Returns an UserEntry Array populated with 100 users, starting from an username
+  #
   # ex : 	list= myapps.retrieve_page_of_users("jsmtih")
+  #
   #  		list.each{ |user| puts user.username}
   def retrieve_page_of_users(start_username)
 	 param='?startUsername='+start_username
@@ -115,13 +136,19 @@ end
 	  msg.about_name(family_name, given_name)
 	  msg.about_quota(quota) if quota
 	  response  = request(:user_create,nil,@headers, msg.to_s)
+  	  user_entry = UserEntry.new(response.elements["entry"])
   end
   
   # params values
+  #
   # passwd_hash_function :  string "SHA-1" or nil
+  #
   # admin :  string "true" or string "false" or nil (no boolean : true or false)
+  #
   # suspended :  string "true" or string "false" or nil (no boolean : true or false)
+  #
   # change_passwd :  string "true" or string "false" or nil (no boolean : true or false)
+  #
   # quota : limit en MB, ex :  string "2048"
   def update_user(username, given_name, family_name, password=nil, passwd_hash_function=nil, admin=nil, suspended=nil, changepasswd=nil, quota=nil)
 	  msg = RequestMessage.new
@@ -130,6 +157,7 @@ end
 	  msg.about_quota(quota) if quota
 	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
 	  response  = request(:user_update,username,@headers, msg.to_s)
+    	  user_entry = UserEntry.new(response.elements["entry"])
   end
   
   def suspend_user(username)
@@ -137,6 +165,7 @@ end
 	  msg.about_login(username,nil,nil,nil,"true")
 	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
 	  response  = request(:user_update,username,@headers, msg.to_s)
+  	  user_entry = UserEntry.new(response.elements["entry"])
   end
   
   def restore_user(username)
@@ -144,6 +173,7 @@ end
 	  msg.about_login(username,nil,nil,nil,"false")
 	  msg.add_path('https://'+@@google_host+@action[:user_update][:path]+username)
 	  response  = request(:user_update,username,@headers, msg.to_s)
+  	  user_entry = UserEntry.new(response.elements["entry"])
   end
 
   def delete_user(username)
@@ -151,7 +181,9 @@ end
   end
 
   # Returns a Nickname instance
+  #
   # ex : nick = myapps.retrieve('joe')
+  #
   #        puts nick.login 	=> jsmith
   def retrieve_nickname(nickname)
 	  xml_response = request(:nickname_retrieve, nickname, @headers)
@@ -159,8 +191,11 @@ end
   end
   
   # Returns a Nickname object array from an username
+  #
   # ex : lists jsmith's nicknames
+  #
   #       mynicks = myapps.retrieve('jsmith')
+  #
   #       mynicks.each {|nick| puts nick.nickname }
   def retrieve_nicknames(username)
 	  xml_response = request(:nickname_retrieve_all_for_user, username, @headers)
@@ -169,7 +204,9 @@ end
   end
   
   # Returns a Nickname object array for the whole domain
+  #
   # 	allnicks = myapps.retrieve_all_nicknames
+  #
   # 	allnicks.each {|nick| puts nick.nickname }
   def retrieve_all_nicknames
 	  xml_response = request(:nickname_retrieve_all_in_domain, nil, @headers)
@@ -182,6 +219,7 @@ end
 	  msg.about_login(username)
 	  msg.about_nickname(nickname)
 	  response  = request(:nickname_create,nil,@headers, msg.to_s)
+	  nickname_entry = NicknameEntry.new(response.elements["entry"])
   end
   
   def delete_nickname(nickname)
@@ -189,7 +227,9 @@ end
   end
   
   # Returns an NicknameEntry Array populated with 100 nicknames, starting from an nickname
+  #
   # ex : 	list= myapps.retrieve_page_of_nicknames("joe")
+  #
   #  		list.each{ |nick| puts nick.login}
   def retrieve_page_of_nicknames(start_nickname)
 	  param='?startNickname='+start_nickname
@@ -198,7 +238,9 @@ end
   end
   
   # Returns an Email_list Array from an email adress
+  #
   # ex :	mylists = myapps.retrieve_email_lists('jsmith')   <= you could search from 'jsmith@mydomain.com' too 
+  #
   # 		mylists.each {|list| puts list.email_list }
   def retrieve_email_lists(email_adress)
 	  xml_response = request(:email_list_retrieve_for_an_email, email_adress, @headers)
@@ -207,7 +249,9 @@ end
   end	  
   
   # Returns an Email_list Array for the whole domain
+  #
   # ex :	all_lists = myapps.retrieve_all_email_lists
+  #
   # 		all_lists.each {|list| puts list.email_list }
   def retrieve_all_email_lists
 	  xml_response = request(:email_list_retrieve_in_domain, nil, @headers)
@@ -216,8 +260,11 @@ end
   end
   
   # Returns an EmailListEntry Array populated with 100 email lists, starting from an email list name
+  #
   # Startinf email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomaine.com".
+  #
   # ex : 	list= myapps.retrieve_page_of_email_lists("mylist") 
+  #
   #  		list.each{ |entry| puts entry.email_list}
   def retrieve_page_of_email_lists(start_listname)
 	  param='?startEmailListName='+start_listname
@@ -229,6 +276,7 @@ end
 	  msg = RequestMessage.new
 	  msg.about_email_list(name)
 	  response  = request(:email_list_create,nil,@headers, msg.to_s)
+	  email_list_entry = EmailListEntry.new(response.elements["entry"])
   end
   
   def delete_email_list(name)
@@ -236,7 +284,9 @@ end
   end
   
   # Returns an Email_list_recipient Array from an email list
+  #
   # ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
+  #
   # 		recipients.each {|recipient| puts recipient.email }
   def retrieve_all_recipients(email_list)
 	  param = email_list+'/recipient/'
@@ -246,7 +296,9 @@ end
   end
   
   # Returns an EmailListRecipientEntry Array populated with 100 recipients of an email list, starting from an recipient name
+  #
   # ex : 	list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
+  #
   #  		list.each{ |recipient| puts recipient.email}
   def retrieve_page_of_recipients(email_list, start_recipient)
 	   param = email_list+'/recipient/?startRecipient='+start_recipient
@@ -259,6 +311,7 @@ end
 	  msg.about_email_list(email_list)
 	  msg.about_who(address)
 	  response  = request(:subscription_add, email_list+'/recipient/',@headers, msg.to_s)
+	  email_list_recipient_entry = EmailListRecipientEntry.new(response.elements["entry"])
   end
   
   def remove_address_from_email_list(address,email_list)
@@ -291,7 +344,9 @@ end
   end
 
   # Perfoms a REST request based on the action hash (cf setup_actions)
+  #
   # ex : request (:user_retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith
+  #
   # returns  REXML Document
   def request(action, value=nil, header=nil, message=nil)
   #param value : value to be concatenated to action path ex: GET host/path/value
