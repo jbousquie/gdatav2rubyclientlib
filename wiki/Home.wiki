@@ -1,1 +1,3 @@
-#Home page for the Ruby Client Library for Google Apps Provisioning API
+=Ruby Client Library for Google Apps Provisioning API=
+
+I will post the rdoc on my work web site soon.
