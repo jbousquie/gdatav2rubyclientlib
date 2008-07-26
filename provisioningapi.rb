@@ -1,4 +1,19 @@
+#!/usr/bin/ruby
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0 
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+#
 require 'connection'
+require 'exceptions'
 require 'cgi'
 require 'rexml/document'
 include REXML
@@ -284,10 +299,25 @@ end
   	value = '' if !value
   	path = @action[action][:path]+value
 	response = @connection.perform(method, path, message, header)
-	return Document.new(response.body)
+	response_xml = Document.new(response.body)
+	test_errors(response_xml)
+	return response_xml
+  end
+
+  def test_errors(xml)
+	 error = xml.elements["AppsForYourDomainErrors/error"]
+	 if  error
+		 gdata_error = GDataError.new
+		 gdata_error.code = error.attributes["errorCode"]
+		 gdata_error.input = error.attributes["invalidInput"]
+		 gdata_error.reason = error.attributes["reason"]
+		 msg = "error code : "+gdata_error.code+", invalid input : "+gdata_error.input+", reason : "+gdata_error.reason
+		 raise gdata_error, msg
+	end
   end
 
 end
+
 
 # UserEntry object
 class UserEntry 
@@ -304,7 +334,6 @@ attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :
 	@agreed_to_terms = entry.elements["apps:login"].attributes["agreedToTerms"]
 	@quota_limit = entry.elements["apps:quota"].attributes["limit"]
   end
-
 end
 
 
@@ -318,6 +347,7 @@ class NicknameEntry
   end	
 end
 
+
 # EmailListEntry object 
 class EmailListEntry 
   attr_reader :email_list
@@ -326,6 +356,7 @@ class EmailListEntry
 	@email_list = entry.elements["apps:emailList"].attributes["name"]
   end	
 end
+
 
 # EmailListRecipientEntry object 
 class EmailListRecipientEntry 
@@ -336,6 +367,7 @@ class EmailListRecipientEntry
   end	
 end
 
+
 # UserFeed object : Array populated with Element_class objects
 class Feed < Array
   # UserFeed constructor. Populates an array with Element_class objects. Each object is an xml "entry" parsed from the REXML::Element "feed".
@@ -344,8 +376,8 @@ class Feed < Array
   def initialize(xml_feed, element_class)
 	  xml_feed.elements.each("entry"){ |entry| self << element_class.new(entry) }
    end
-   
 end
+
 
 class RequestMessage < Document
   # Request message constructor.
