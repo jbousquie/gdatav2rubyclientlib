@@ -15,6 +15,7 @@
 require 'net/https'
 require 'cgi'
 
+module GAppsProvisioning #:nodoc:
 class Connection
   attr_reader  :http_connection
   
