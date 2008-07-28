@@ -22,6 +22,10 @@ include REXML
 
 module GAppsProvisioning #:nodoc:
 
+	# == Google Apps Provisioning API client library
+	#
+	#	This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
+	#
 	# == Examples
 	#
 	#	#!/usr/bin/ruby
@@ -48,8 +52,8 @@ module GAppsProvisioning #:nodoc:
 	#
 	# Email lists
 	#
-	# new_list = myapps.create_email_list("sale-dep")
-	# new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
+	# 	new_list = myapps.create_email_list("sale-dep")
+	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
 
 	class ProvisioningApi
 		@@google_host = 'www.google.com'
