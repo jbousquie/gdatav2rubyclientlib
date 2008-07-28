@@ -24,7 +24,14 @@ module GAppsProvisioning #:nodoc:
 
 	# == Google Apps Provisioning API client library
 	#
-	#	This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
+	# This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
+	# It's based on the GDATA provisioning API v2.0.
+	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html.
+	#
+	# For compatibility reasons for programmers coming from other languages,
+	# all the public methods with _ruby_style_ names are aliased with _javaStyle_ names. Ex : create_user and createUser.
+	#
+	# Notice : because it uses REXML, your script using this library MUST be encoded in unicode (UTF-8).
 	#
 	# == Examples
 	#
@@ -45,7 +52,8 @@ module GAppsProvisioning #:nodoc:
 	#
 	#	begin
 	#		user = myapps.retrieve_user('noone')
-	#		puts "givenName : "+user.given_name, "familyName : "+user.family_name, "username : "+user.username, "admin ? : "+user.admin
+	#		puts "givenName : "+user.given_name, "familyName : "+user.family_name, "username : "+user.username"
+	#		puts "admin ? : "+user.admin
 	#	rescue GDataError => e
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
@@ -54,6 +62,10 @@ module GAppsProvisioning #:nodoc:
 	#
 	# 	new_list = myapps.create_email_list("sale-dep")
 	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
+	#
+	# Author :: Jerome Bousquie
+	# Ruby version :: from 1.8.6
+	# Licence :: Apache Licence, version 2
 
 	class ProvisioningApi
 		@@google_host = 'www.google.com'
@@ -359,6 +371,31 @@ module GAppsProvisioning #:nodoc:
 		def remove_address_from_email_list(address,email_list)
 			response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
 		end
+		
+		# Aliases
+		alias createUser create_user
+		alias retrieveUser retrieve_user
+		alias retrieveAllUsers retrieve_all_users
+		alias retrievePageOfUsers retrieve_page_of_users
+		alias updateUser update_user
+		alias suspendUser suspend_user
+		alias restoreUser restore_user
+		alias deleteUser delete_user
+		alias createNickname create_nickname
+		alias retrieveNickname retrieve_nickname
+		alias retrieveNicknames retrieve_nicknames
+		alias retrieveAllNicknames retrieve_all_nicknames
+		alias retrievePageOfNicknames retrieve_page_of_nicknames
+		alias deleteNickname delete_nickname
+		alias createEmailList create_email_list
+		alias retrieveEmailLists retrieve_email_lists
+		alias retrieveAllEmailLists retrieve_all_email_lists
+		alias retrievePageOfEmailLists retrieve_page_of_email_lists
+		alias deleteEmailList delete_email_list
+		alias addRecipientToEmailList add_address_to_email_list
+		alias retrieveAllRecipients retrieve_all_recipients
+		alias retrievePageOfRecipients retrieve_page_of_recipients
+		alias removeRecipientFromEmailList remove_address_from_email_list
 	
 		# private methods
 		private #:nodoc:
