@@ -18,8 +18,38 @@ require 'cgi'
 require 'rexml/document'
 include REXML
 
+
+
 module GAppsProvisioning #:nodoc:
 
+	# == Examples
+	#
+	#	#!/usr/bin/ruby
+	#	require 'gappsprovisioning/provisioningapi'
+	#	adminuser = "root@mydomain.com"
+	#	password  = "PaSsWo4d!"
+	#	myapps = GAppsProvisioning::ProvisioningApi.new(adminuser,password)	
+	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
+	#
+	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
+	#	puts new_user.family_name
+	#	puts new_user.given_name
+	#
+	#  new_nickname = myapps.create_nickname("jsmith", "john.smith")
+	#
+	# Want handle errors ?
+	#
+	#	begin
+	#		user = myapps.retrieve_user('noone')
+	#		puts "givenName : "+user.given_name, "familyName : "+user.family_name, "username : "+user.username, "admin ? : "+user.admin
+	#	rescue GDataError => e
+	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
+	#	end
+	#
+	# Email lists
+	#
+	# new_list = myapps.create_email_list("sale-dep")
+	# new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
 
 	class ProvisioningApi
 		@@google_host = 'www.google.com'
@@ -69,7 +99,7 @@ module GAppsProvisioning #:nodoc:
 			user_entry = UserEntry.new(xml_response.elements["entry"])
 		end
  
-		# Returns an UserEntry array populated with all the users in the domain
+		# Returns an UserEntry array populated with all the users in the domain. May take a while depending on the number of users in your domain.
 		# 	ex : 	
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			list= myapps.retrieve_all_users
@@ -164,30 +194,34 @@ module GAppsProvisioning #:nodoc:
 		# Deletes an account in your domain
 		#		ex :
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#			user = myapps.delete('jsmith')
+		#			myapps.delete('jsmith')
 		def delete_user(username)
 			response  = request(:user_delete,username,@headers)
 		end
 
-		# Returns a Nickname instance
-		# ex : nick = myapps.retrieve('joe')
-		#        puts nick.login 	=> jsmith
+		# Returns a NicknameEntry instance from a nickname
+		# 	ex :	
+		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#			nickname = myapps.retrieve_nickname('jsmith')
+		#			puts "login : "+nickname.login
 		def retrieve_nickname(nickname)
 			xml_response = request(:nickname_retrieve, nickname, @headers)
 			nickname_entry = NicknameEntry.new(xml_response.elements["entry"])
 		end
 	
-		# Returns a Nickname object array from an username
-		# ex : lists jsmith's nicknames
-		#       mynicks = myapps.retrieve('jsmith')
-		#       mynicks.each {|nick| puts nick.nickname }
+		# Returns a NicknameEntry array from an username
+		#	ex : lists jsmith's nicknames
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		# 		mynicks = myapps.retrieve('jsmith')
+		#		mynicks.each {|nick| puts nick.nickname }
 		def retrieve_nicknames(username)
 			xml_response = request(:nickname_retrieve_all_for_user, username, @headers)
 			nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
 			nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
 		end
 	
-		# Returns a Nickname object array for the whole domain
+		# Returns a NicknameEntry array for the whole domain. May take a while depending on the number of users in your domain.
+		#	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		# 	allnicks = myapps.retrieve_all_nicknames
 		# 	allnicks.each {|nick| puts nick.nickname }
 		def retrieve_all_nicknames
@@ -195,7 +229,10 @@ module GAppsProvisioning #:nodoc:
 			nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
 			nicknames_feed = add_next_feeds(nicknames_feed, xml_response, NicknameEntry)
 		end
-	
+
+		# Creates a nickname for the username in your domain and returns a NicknameEntry instance
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		# 		mynewnick = myapps.create_nickname('jsmith', 'john.smith')
 		def create_nickname(username,nickname)
 			msg = RequestMessage.new
 			msg.about_login(username)
@@ -203,62 +240,83 @@ module GAppsProvisioning #:nodoc:
 			response  = request(:nickname_create,nil,@headers, msg.to_s)
 			nickname_entry = NicknameEntry.new(response.elements["entry"])
 		end
-	
+		
+		# Deletes the nickname  in your domain 
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		# 		myapps.delete_nickname('john.smith')
 		def delete_nickname(nickname)
 			response  = request(:nickname_delete,nickname,@headers)
 		end
 	
-		# Returns an NicknameEntry Array populated with 100 nicknames, starting from an nickname
-		# ex : 	list= myapps.retrieve_page_of_nicknames("joe")
-		#  				list.each{ |nick| puts nick.login}
+		# Returns an NicknameEntry array populated with 100 nicknames, starting from an nickname
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list= myapps.retrieve_page_of_nicknames("joe")
+		#  		list.each{ |nick| puts nick.login}
 		def retrieve_page_of_nicknames(start_nickname)
 			param='?startNickname='+start_nickname
 			xml_response = request(:nickname_retrieve_all_in_domain, param, @headers)
 			nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
 		end
 	
-		# Returns an Email_list Array from an email adress
-		# ex :	mylists = myapps.retrieve_email_lists('jsmith')   <= you could search from 'jsmith@mydomain.com' too 
-		# 			mylists.each {|list| puts list.email_list }
+		# Returns an EmailListEntry array from an email adress
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		mylists = myapps.retrieve_email_lists('jsmith')   <= you could search from 'jsmith@mydomain.com' too 
+		# 		mylists.each {|list| puts list.email_list }
 		def retrieve_email_lists(email_adress)
 			xml_response = request(:email_list_retrieve_for_an_email, email_adress, @headers)
 			email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
 			email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
 		end	  
 	
-		# Returns an Email_list Array for the whole domain
-		# ex :	all_lists = myapps.retrieve_all_email_lists
-		# 			all_lists.each {|list| puts list.email_list }
+		# Returns an EmailListEntry array for the whole domain
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		all_lists = myapps.retrieve_all_email_lists
+		# 		all_lists.each {|list| puts list.email_list }
 		def retrieve_all_email_lists
 			xml_response = request(:email_list_retrieve_in_domain, nil, @headers)
 			email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
 			email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
 		end
 	
-		# Returns an EmailListEntry Array populated with 100 email lists, starting from an email list name
-		# Startinf email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomaine.com".
-		# ex : 	list= myapps.retrieve_page_of_email_lists("mylist") 
-		#  				list.each{ |entry| puts entry.email_list}
+		# Returns an EmailListEntry array populated with 100 email lists, starting from an email list name.
+		# Starting email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomaine.com".
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list= myapps.retrieve_page_of_email_lists("mylist") 
+		#  		list.each{ |entry| puts entry.email_list}
 		def retrieve_page_of_email_lists(start_listname)
 			param='?startEmailListName='+start_listname
 			xml_response = request(:email_list_retrieve_in_domain, param, @headers)
 			nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry)
 		end
-	
+		
+		# Creates an email list in your domain and returns an EmailListEntry
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list= myapps.create_email_lists("mylist") 
 		def create_email_list(name)
 			msg = RequestMessage.new
 			msg.about_email_list(name)
-			esponse  = request(:email_list_create,nil,@headers, msg.to_s)
+			response  = request(:email_list_create,nil,@headers, msg.to_s)
 			email_list_entry = EmailListEntry.new(response.elements["entry"])
 		end
-	
+
+		# Deletes an email list in your domain. Omit "@mydomain.com" in the email list name.
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		myapps.delete_email_lists("mylist")
 		def delete_email_list(name)
 			response  = request(:email_list_delete,name,@headers)
 		end
 	
-		# Returns an Email_list_recipient Array from an email list
-		# ex :	recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
-		# 			recipients.each {|recipient| puts recipient.email }
+		# Returns an EmailListRecipientEntry array for an email list. 
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
+		# 		recipients.each {|recipient| puts recipient.email }
 		def retrieve_all_recipients(email_list)
 			param = email_list+'/recipient/'
 			xml_response = request(:subscription_retrieve, param, @headers)
@@ -266,8 +324,10 @@ module GAppsProvisioning #:nodoc:
 			email_list_recipient_feed = add_next_feeds(email_list_recipient_feed, xml_response, EmailListRecipientEntry)
 		end
 	
-		# Returns an EmailListRecipientEntry Array populated with 100 recipients of an email list, starting from an recipient name
-		# ex : 	list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
+		# Returns an EmailListRecipientEntry Array populated with 100 recipients of an email list, starting from an recipient name.  Omit "@mydomain.com" in the email list name.
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
 		#  		list.each{ |recipient| puts recipient.email}
 		def retrieve_page_of_recipients(email_list, start_recipient)
 			param = email_list+'/recipient/?startRecipient='+start_recipient
@@ -275,6 +335,11 @@ module GAppsProvisioning #:nodoc:
 			recipients_feed = Feed.new(xml_response.elements["feed"], EmailListRecipientEntry)
 		end
 	
+		# Adds an email address to an email list in your domain and returns an EmailListRecipientEntry instance.
+		# You can add addresses from other domains to your email list.  Omit "@mydomain.com" in the email list name.
+		#	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		new_address = myapps.add_address_to_email_list('mylist', 'foo@otherdomain.com')
 		def add_address_to_email_list(email_list,address)
 			msg = RequestMessage.new
 			msg.about_email_list(email_list)
@@ -283,6 +348,10 @@ module GAppsProvisioning #:nodoc:
 			email_list_recipient_entry = EmailListRecipientEntry.new(response.elements["entry"])
 		end
 	
+		# Removes an addresse from an email list.
+		# 	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		myapps.remove_address_from_email_list('foo@otherdomain.com', 'mylist')
 		def remove_address_from_email_list(address,email_list)
 			response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
 		end
@@ -356,6 +425,7 @@ module GAppsProvisioning #:nodoc:
 			return response_xml
 		end
 
+		# parses xml response for an API error tag. If an error, constructs and raises an GDataError.
 		def test_errors(xml)
 			error = xml.elements["AppsForYourDomainErrors/error"]
 			if  error
@@ -370,12 +440,25 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
-	# UserEntry object
+	# UserEntry object.
+	#
+	# Handles API responses relative to an user
+	#
+	# Attributes :
+	#	username : string
+	#	given_name : string
+	#	family_name : string
+	#	suspended : string "true" or string "false"
+	#	ip_whitelisted : string "true" or string "false"
+	#	admin : string "true" or string "false"
+	#	change_password_at_next_login : string "true" or string "false"
+	#	agreed_to_terms : string "true" or string "false"
+	#	quota_limit : string (value in MB)
 	class UserEntry 
 	attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms, :quota_limit
 	
-		# UserEntry constructor. Needs a REXML::Element "entry" as parameter
-		def initialize(entry)
+		# UserEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
 			@family_name = entry.elements["apps:name"].attributes["familyName"]
 			@given_name = entry.elements["apps:name"].attributes["givenName"]
 			@username = entry.elements["apps:login"].attributes["userName"]
@@ -389,44 +472,60 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
-	# NicknameEntry object 
-	class NicknameEntry 
+	# NicknameEntry object.
+	#
+	# Handles API responses relative to a nickname
+	#
+	# Attributes :
+	#	login : string
+	#	nickname : string
+	class NicknameEntry
 	attr_reader :login, :nickname
 	
-		# NicknameEntry constructor. Needs a REXML::Element "entry" as parameter
-		def initialize(entry)
+		# NicknameEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
 		@login = entry.elements["apps:login"].attributes["userName"]
 		@nickname = entry.elements["apps:nickname"].attributes["name"]
 		end	
 	end
 
 
-	# EmailListEntry object 
+	# EmailListEntry object.
+	#
+	# Handles API responses relative to an email list.
+	#
+	# Attributes :
+	#	email_list : string . The email list name is written without "@" and everything following.
 	class EmailListEntry 
 	attr_reader :email_list
 	
-		# EmailListEntry constructor. Needs a REXML::Element "entry" as parameter
-		def initialize(entry)
+		# EmailListEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
 		@email_list = entry.elements["apps:emailList"].attributes["name"]
 		end	
 	end
 
 
-	# EmailListRecipientEntry object 
+	# EmailListRecipientEntry object.
+	#
+	# Handles API responses relative to a recipient.
+	#
+	# Attributes :
+	#	email : string
 	class EmailListRecipientEntry 
 	attr_reader :email
 	
-		# EmailListEntry constructor. Needs a REXML::Element "entry" as parameter
-		def initialize(entry)
+		# EmailListEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
 		@email = entry.elements["gd:who"].attributes["email"]
 		end	
 	end
 
 
-	# UserFeed object : Array populated with Element_class objects
+	# UserFeed object : Array populated with Element_class objects (UserEntry, NicknameEntry, EmailListEntry or EmailListRecipientEntry)
 	class Feed < Array #:nodoc:
 	
-		# UserFeed constructor. Populates an array with Element_class objects. Each object is an xml "entry" parsed from the REXML::Element "feed".
+		# UserFeed constructor. Populates an array with Element_class objects. Each object is an xml <entry> parsed from the REXML::Element <feed>.
 		# Ex : user_feed = Feed.new(xml_feed, UserEntry)
 		#	    	nickname_feed = Feed.new(xml_feed, NicknameEntry)
 		def initialize(xml_feed, element_class)
@@ -439,6 +538,7 @@ module GAppsProvisioning #:nodoc:
 		# Request message constructor.
 		# parameter type : "user", "nickname" or "emailList"  
 		
+		# creates the object and initiates the construction
 		def initialize
 			super '<?xml version="1.0" encoding="UTF-8"?>' 
 			self.add_element "atom:entry", {"xmlns:apps" => "http://schemas.google.com/apps/2006",
@@ -447,16 +547,19 @@ module GAppsProvisioning #:nodoc:
 			self.elements["atom:entry"].add_element "atom:category", {"scheme" => "http://schemas.google.com/g/2005#kind"}
 		end
  
+		# adds <atom:id> element in the message body. Url is inserted as a text.
 		def add_path(url)
 			self.elements["atom:entry"].add_element "atom:id"
 			self.elements["atom:entry/atom:id"].text = url
 		end
  
+		# adds <apps:emailList> element in the message body.
 		def about_email_list(email_list)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#emailList")
 			self.elements["atom:entry"].add_element "apps:emailList", {"name" => email_list } 
 		end
  
+		# adds <apps:login> element in the message body.
 		# warning :  if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
 		# when needed to construct the message, should always been used before other "about_" methods so that the category tag can be overwritten
 		# only values permitted for hash_function_function_name : "SHA-1" or nil
@@ -471,23 +574,27 @@ module GAppsProvisioning #:nodoc:
 			return self
 		end
 	 
+		# adds <apps:quota> in the message body.
 		# limit in MB: integer
 		def about_quota(limit)
 			self.elements["atom:entry"].add_element "apps:quota", {"limit" => limit }  
 			return self
 		end	   
  
+		# adds <apps:name> in the message body.
 		def about_name(family_name, given_name)
 			self.elements["atom:entry"].add_element "apps:name", {"familyName" => family_name, "givenName" => given_name } 
 			return self
 		end
 
+		# adds <apps:nickname> in the message body.
 		def about_nickname(name)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#nickname")
 			self.elements["atom:entry"].add_element "apps:nickname", {"name" => name} 
 			return self
 		end
  
+		# adds <gd:who> in the message body.
 		def about_who(email)
 			self.elements["atom:entry"].add_element "gd:who", {"email" => email } 
 			return self

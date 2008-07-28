@@ -11,7 +11,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations under
 # the License.
+module GAppsProvisioning #:nodoc:
 
-class GDataError < RuntimeError
-	attr_accessor :code, :input, :reason
-end
+	class GDataError < RuntimeError
+		attr_accessor :code, :input, :reason
+	end
