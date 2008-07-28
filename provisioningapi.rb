@@ -45,10 +45,17 @@ module GAppsProvisioning #:nodoc:
 	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
 	#	puts new_user.family_name
 	#	puts new_user.given_name
+	#	
+	# Want to update an user ?
 	#
-	#  new_nickname = myapps.create_nickname("jsmith", "john.smith")
+	#	user = myapps.retrieve_user('jsmith')
+	#	user_updated = myapps.update_user(user.username, user.given_name, user.family_name, nil, nil, "true")
 	#
-	# Want handle errors ?
+	# Want to add an alias or nickname ?
+	#
+	#  	new_nickname = myapps.create_nickname("jsmith", "john.smith")
+	#
+	# Want to handle errors ?
 	#
 	#	begin
 	#		user = myapps.retrieve_user('noone')
@@ -58,12 +65,12 @@ module GAppsProvisioning #:nodoc:
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-	# Email lists
+	# Email lists ?
 	#
 	# 	new_list = myapps.create_email_list("sale-dep")
 	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
 	#
-	# Author :: Jerome Bousquie
+	# Author :: Jérôme Bousquié
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
 
