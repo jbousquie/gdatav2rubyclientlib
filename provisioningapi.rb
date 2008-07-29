@@ -14,9 +14,10 @@
 	#
 	#	#!/usr/bin/ruby
 	#	require 'gappsprovisioning/provisioningapi'
+	#	include GAppsProvisioning
 	#	adminuser = "root@mydomain.com"
 	#	password  = "PaSsWo4d!"
-	#	myapps = GAppsProvisioning::ProvisioningApi.new(adminuser,password)	
+	#	myapps = ProvisioningApi.new(adminuser,password)	
 	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
 	#
 	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
@@ -63,10 +64,13 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 #
-require 'gappsprovisioning/connection'
-require 'gappsprovisioning/exceptions'
+
 require 'cgi'
 require 'rexml/document'
+
+require 'gappsprovisioning/connection'
+require 'gappsprovisioning/exceptions'
+
 include REXML
 
 
@@ -78,7 +82,7 @@ module GAppsProvisioning #:nodoc:
 	#
 	#	adminuser = "root@mydomain.com"
 	#	password  = "PaSsWo4d!"
-	#	myapps = GAppsProvisioning::ProvisioningApi.new(adminuser,password)	
+	#	myapps = ProvisioningApi.new(adminuser,password)	
 	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
 	#
 	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
@@ -342,7 +346,7 @@ module GAppsProvisioning #:nodoc:
 		end
 	
 		# Returns an EmailListEntry array populated with 100 email lists, starting from an email list name.
-		# Starting email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomaine.com".
+		# Starting email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomain.com".
 		# 	ex : 	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#		list= myapps.retrieve_page_of_email_lists("mylist") 

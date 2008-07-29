@@ -16,3 +16,4 @@ module GAppsProvisioning #:nodoc:
 	class GDataError < RuntimeError
 		attr_accessor :code, :input, :reason
 	end
+end
