@@ -1,27 +1,4 @@
 #!/usr/bin/ruby
-#
-# Licensed under the Apache License, Version 2.0 (the "License"); you may not
-# use this file except in compliance with the License. You may obtain a copy of
-# the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0 
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
-# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
-# License for the specific language governing permissions and limitations under
-# the License.
-#
-require 'gappsprovisioning/connection'
-require 'gappsprovisioning/exceptions'
-require 'cgi'
-require 'rexml/document'
-include REXML
-
-
-
-module GAppsProvisioning #:nodoc:
-
 	# == Google Apps Provisioning API client library
 	#
 	# This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
@@ -73,6 +50,66 @@ module GAppsProvisioning #:nodoc:
 	# Author :: Jérôme Bousquié
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0 
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+#
+require 'gappsprovisioning/connection'
+require 'gappsprovisioning/exceptions'
+require 'cgi'
+require 'rexml/document'
+include REXML
+
+
+
+module GAppsProvisioning #:nodoc:
+
+	# =Administrative object for accessing your domain
+	# Examples
+	#
+	#	adminuser = "root@mydomain.com"
+	#	password  = "PaSsWo4d!"
+	#	myapps = GAppsProvisioning::ProvisioningApi.new(adminuser,password)	
+	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
+	#
+	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
+	#	puts new_user.family_name
+	#	puts new_user.given_name
+	#	
+	# Want to update an user ?
+	#
+	#	user = myapps.retrieve_user('jsmith')
+	#	user_updated = myapps.update_user(user.username, user.given_name, user.family_name, nil, nil, "true")
+	#
+	# Want to add an alias or nickname ?
+	#
+	#  	new_nickname = myapps.create_nickname("jsmith", "john.smith")
+	#
+	# Want to handle errors ?
+	#
+	#	begin
+	#		user = myapps.retrieve_user('noone')
+	#		puts "givenName : "+user.given_name, "familyName : "+user.family_name, "username : "+user.username"
+	#		puts "admin ? : "+user.admin
+	#	rescue GDataError => e
+	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
+	#	end
+	#
+	# Email lists ?
+	#
+	# 	new_list = myapps.create_email_list("sale-dep")
+	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
+	#
+
 
 	class ProvisioningApi
 		@@google_host = 'www.google.com'
