@@ -1,3 +1,11 @@
 =Ruby Client Library for Google Apps Provisioning API=
 
 [http://personnel.univ-reunion.fr/bousquie/ruby/gappsprovisioning/doc/ On-line documentation]
+
+==Changelog==
+
+release 1.0.2
+* some english errors fixed in the documentation
+
+release 1.0.1
+* added commented line in connection.rb : connection with no certificate checking allowed
