@@ -5,8 +5,7 @@
 	# It's based on the GDATA provisioning API v2.0.
 	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html.
 	#
-	# For compatibility reasons for programmers coming from other languages,
-	# all the public methods with _ruby_style_ names are aliased with _javaStyle_ names. Ex : create_user and createUser.
+	# All the public methods with _ruby_style_ names are aliased with _javaStyle_ names. Ex : create_user and createUser.
 	#
 	# Notice : because it uses REXML, your script using this library MUST be encoded in unicode (UTF-8).
 	#
@@ -24,7 +23,7 @@
 	#	puts new_user.family_name
 	#	puts new_user.given_name
 	#	
-	# Want to update an user ?
+	# Want to update a user ?
 	#
 	#	user = myapps.retrieve_user('jsmith')
 	#	user_updated = myapps.update_user(user.username, user.given_name, user.family_name, nil, nil, "true")
@@ -89,7 +88,7 @@ module GAppsProvisioning #:nodoc:
 	#	puts new_user.family_name
 	#	puts new_user.given_name
 	#	
-	# Want to update an user ?
+	# Want to update a user ?
 	#
 	#	user = myapps.retrieve_user('jsmith')
 	#	user_updated = myapps.update_user(user.username, user.given_name, user.family_name, nil, nil, "true")
@@ -152,7 +151,7 @@ module GAppsProvisioning #:nodoc:
 	
 		
 	
-		# Returns an UserEntry instance from an username
+		# Returns a UserEntry instance from a username
 		# 	ex :	
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			user = myapps.retrieve_user('jsmith')
@@ -163,7 +162,7 @@ module GAppsProvisioning #:nodoc:
 			user_entry = UserEntry.new(xml_response.elements["entry"])
 		end
  
-		# Returns an UserEntry array populated with all the users in the domain. May take a while depending on the number of users in your domain.
+		# Returns a UserEntry array populated with all the users in the domain. May take a while depending on the number of users in your domain.
 		# 	ex : 	
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			list= myapps.retrieve_all_users
@@ -175,7 +174,7 @@ module GAppsProvisioning #:nodoc:
 			user_feed = add_next_feeds(user_feed, response, UserEntry)
 		end
 
-		# Returns an UserEntry array populated with 100 users, starting from an username
+		# Returns a UserEntry array populated with 100 users, starting from a username
 		# 	ex : 	
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			list= myapps.retrieve_page_of_users("jsmtih")
@@ -186,7 +185,7 @@ module GAppsProvisioning #:nodoc:
 			user_feed = Feed.new(response.elements["feed"],  UserEntry)
 		end
  
-		# Creates an account in your domain, returns an UserEntry instance
+		# Creates an account in your domain, returns a UserEntry instance
 		# 	params :
 		#			username, given_name, family_name and password are required
 		#			passwd_hash_function (optional) : nil (default) or "SHA-1"
@@ -205,7 +204,7 @@ module GAppsProvisioning #:nodoc:
 			user_entry = UserEntry.new(response.elements["entry"])
 		end
 
-		# Updates an account in your domain, returns an UserEntry instance
+		# Updates an account in your domain, returns a UserEntry instance
 		# 	params :
 		#			username is required and can't be updated.
 		#			given_name and family_name are required, may be updated.
@@ -229,7 +228,7 @@ module GAppsProvisioning #:nodoc:
 			user_entry = UserEntry.new(response.elements["entry"])
 		end
 	
-		# Suspends an account in your domain, returns an UserEntry instance
+		# Suspends an account in your domain, returns a UserEntry instance
 		#		ex :
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			user = myapps.suspend('jsmith')
@@ -242,7 +241,7 @@ module GAppsProvisioning #:nodoc:
 			user_entry = UserEntry.new(response.elements["entry"])
 		end
 
-		# Restores a suspended account in your domain, returns an UserEntry instance
+		# Restores a suspended account in your domain, returns a UserEntry instance
 		#		ex :
 		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#			user = myapps.restore('jsmith')
@@ -273,7 +272,7 @@ module GAppsProvisioning #:nodoc:
 			nickname_entry = NicknameEntry.new(xml_response.elements["entry"])
 		end
 	
-		# Returns a NicknameEntry array from an username
+		# Returns a NicknameEntry array from a username
 		#	ex : lists jsmith's nicknames
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		# 		mynicks = myapps.retrieve('jsmith')
@@ -312,7 +311,7 @@ module GAppsProvisioning #:nodoc:
 			response  = request(:nickname_delete,nickname,@headers)
 		end
 	
-		# Returns an NicknameEntry array populated with 100 nicknames, starting from an nickname
+		# Returns a NicknameEntry array populated with 100 nicknames, starting from a nickname
 		# 	ex : 	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#		list= myapps.retrieve_page_of_nicknames("joe")
@@ -346,7 +345,7 @@ module GAppsProvisioning #:nodoc:
 		end
 	
 		# Returns an EmailListEntry array populated with 100 email lists, starting from an email list name.
-		# Starting email list name must be written  as "mylist", not as "mylist@mydomain.com". Omit "@mydomain.com".
+		# Starting email list name must be written "mylist", not "mylist@mydomain.com". Omit "@mydomain.com".
 		# 	ex : 	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#		list= myapps.retrieve_page_of_email_lists("mylist") 
@@ -388,7 +387,7 @@ module GAppsProvisioning #:nodoc:
 			email_list_recipient_feed = add_next_feeds(email_list_recipient_feed, xml_response, EmailListRecipientEntry)
 		end
 	
-		# Returns an EmailListRecipientEntry Array populated with 100 recipients of an email list, starting from an recipient name.  Omit "@mydomain.com" in the email list name.
+		# Returns an EmailListRecipientEntry Array populated with 100 recipients from an email list, starting from a recipient name.  Omit "@mydomain.com" in the email list name.
 		# 	ex : 	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#		list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
@@ -412,7 +411,7 @@ module GAppsProvisioning #:nodoc:
 			email_list_recipient_entry = EmailListRecipientEntry.new(response.elements["entry"])
 		end
 	
-		# Removes an addresse from an email list.
+		# Removes an address from an email list.
 		# 	ex :
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
 		#		myapps.remove_address_from_email_list('foo@otherdomain.com', 'mylist')
@@ -501,7 +500,7 @@ module GAppsProvisioning #:nodoc:
 		end
 
 		# Perfoms a REST request based on the action hash (cf setup_actions)
-		# ex : request (:user_retrieve, 'jsmith') sends an http GET www.google.com/a/feeds/domain/user/2.0/jsmith	
+		# ex : request (:user_retrieve, 'jsmith') sends a http GET www.google.com/a/feeds/domain/user/2.0/jsmith	
 		# returns  REXML Document
 		def request(action, value=nil, header=nil, message=nil)
 			#param value : value to be concatenated to action path ex: GET host/path/value
@@ -514,7 +513,7 @@ module GAppsProvisioning #:nodoc:
 			return response_xml
 		end
 
-		# parses xml response for an API error tag. If an error, constructs and raises an GDataError.
+		# parses xml response for an API error tag. If an error, constructs and raises a GDataError.
 		def test_errors(xml)
 			error = xml.elements["AppsForYourDomainErrors/error"]
 			if  error
@@ -531,7 +530,7 @@ module GAppsProvisioning #:nodoc:
 
 	# UserEntry object.
 	#
-	# Handles API responses relative to an user
+	# Handles API responses relative to a user
 	#
 	# Attributes :
 	#	username : string
