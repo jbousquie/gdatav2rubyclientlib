@@ -5,7 +5,7 @@
 ==Changelog==
 
 release 1.0.2
-* some english errors fixed in the documentation
+  * some english errors fixed in the documentation
 
 release 1.0.1
-* added commented line in connection.rb : connection with no certificate checking allowed
+  * added commented line in connection.rb : connection with no certificate checking allowed
