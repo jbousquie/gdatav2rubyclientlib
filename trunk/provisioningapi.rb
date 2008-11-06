@@ -47,6 +47,8 @@
 	# 	new_list = myapps.create_email_list("sale-dep")
 	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
 	#
+  # All methods described in the GAppsProvisioning::ProvisioningApi class documentation.
+  #
 	# Author :: Jérôme Bousquié
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
@@ -115,7 +117,7 @@ module GAppsProvisioning #:nodoc:
 
 
 	class ProvisioningApi
-		@@google_host = 'www.google.com'
+		@@google_host = 'apps-apis.google.com'
 		@@google_port = 443
 		# authentication token, valid up to 24 hours after the last connection
 		attr_reader :token
