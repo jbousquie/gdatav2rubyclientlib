@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 	# == Google Apps Provisioning API client library
 	#
-	# This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
+	# This library allows you to manage your domain (accounts, mailing lists, aliases) within your Ruby code.
 	# It's based on the GDATA provisioning API v2.0.
-	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html.
+	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html
 	#
 	# All the public methods with _ruby_style_ names are aliased with _javaStyle_ names. Ex : create_user and createUser.
 	#
@@ -15,9 +15,9 @@
 	#	require 'gappsprovisioning/provisioningapi'
 	#	include GAppsProvisioning
 	#	adminuser = "root@mydomain.com"
-	#	password  = "PaSsWo4d!"
+	#	password  = "PaSsWoRd!"
 	#	myapps = ProvisioningApi.new(adminuser,password)	
-	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
+	#	(see examples in ProvisioningApi.new documentation for handling proxies)
 	#
 	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
 	#	puts new_user.family_name
@@ -42,13 +42,20 @@
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-	# Email lists ?
+	# Email lists ? (deprecated)
 	#
 	# 	new_list = myapps.create_email_list("sale-dep")
 	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
+        #
+	# Groups ? (i.e. mailing lists)
 	#
-  # All methods described in the GAppsProvisioning::ProvisioningApi class documentation.
-  #
+	# 	new_group = myapps.create_group("mygroup")
+	# 	new_member = myapps.add_member_to_group("mygroup", "user@mydomain.com")
+	# 	new_owner = myapps.add_owner_to_group("mygroup", "user@mydomain.com")
+        #               (ATTENTION: a owner is added only if it's already member of the group!)
+	#
+        # All methods described in the GAppsProvisioning::ProvisioningApi class documentation.
+        #
 	# Author :: Jérôme Bousquié
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
@@ -109,11 +116,18 @@ module GAppsProvisioning #:nodoc:
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-	# Email lists ?
+	# Email lists ? (deprecated)
 	#
 	# 	new_list = myapps.create_email_list("sale-dep")
 	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
+        #
+	# Groups ? (i.e. mailing lists)
 	#
+	# 	new_group = myapps.create_group("mygroup")
+	# 	new_member = myapps.add_member_to_group("mygroup", "user@mydomain.com")
+	# 	new_owner = myapps.add_owner_to_group("mygroup", "user@mydomain.com")
+        #               (ATTENTION: a owner is added only if it's already member of the group!)
+        #
 
 
 	class ProvisioningApi
@@ -123,24 +137,24 @@ module GAppsProvisioning #:nodoc:
 		attr_reader :token
 
 
-	# Creates a new ProvisioningApi object
-	#
-	# 	mail : Google Apps domain administrator e-mail (string)
-	# 	passwd : Google Apps domain administrator password (string)
-	# 	proxy : (optional) host name, or IP, of the proxy (string)
-	# 	proxy_port : (optional) proxy port number (numeric)
-	# 	proxy_user : (optional) login for authenticated proxy only (string)
-	# 	proxy_passwd : (optional) password for authenticated proxy only (string)
-	#
-	#  The domain name is extracted from the mail param value.
-	#
-	# Examples :
-	# 	standard : no proxy
-	# 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-	# 	proxy :
-	# 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080)
-	# 	authenticated proxy :
-	# 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080,'foo','bAr')
+	        # Creates a new ProvisioningApi object
+	        #
+	        # 	mail : Google Apps domain administrator e-mail (string)
+	        # 	passwd : Google Apps domain administrator password (string)
+	        # 	proxy : (optional) host name, or IP, of the proxy (string)
+	        # 	proxy_port : (optional) proxy port number (numeric)
+	        # 	proxy_user : (optional) login for authenticated proxy only (string)
+	        # 	proxy_passwd : (optional) password for authenticated proxy only (string)
+	        #
+	        # The domain name is extracted from the mail param value.
+	        #
+	        # Examples :
+	        # 	standard : no proxy
+	        # 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+	        # 	proxy :
+	        # 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080)
+	        # 	authenticated proxy :
+	        # 	myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd','domain.proxy.com',8080,'foo','bAr')
 		def initialize(mail, passwd, proxy=nil, proxy_port=nil, proxy_user=nil, proxy_passwd=nil)
 			domain = mail.split('@')[1]
 			@action = setup_actions(domain)
@@ -420,6 +434,155 @@ module GAppsProvisioning #:nodoc:
 		def remove_address_from_email_list(address,email_list)
 			response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
 		end
+                
+
+# <-- NEW METHODS FOR GROUPS MANAGEMENT
+
+		# Creates a group in your domain and returns a GroupEntry (ATTENTION: the group name is necessary!).
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		group= myapps.create_group("mygroup", ["My Group name", "My Group description", "<emailPermission>"]) 
+		def create_group(group_id, properties)
+			msg = RequestMessage.new
+			msg.about_group(group_id, properties)
+			response  = request(:group_create, nil, @headers, msg.to_s)
+			group_entry = GroupEntry.new(response.elements["entry"])
+		end
+
+		# Updates a group in your domain and returns a GroupEntry (ATTENTION: the group name is necessary!).
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		group= myapps.update_group("mygroup", ["My Group name", "My Group description", "<emailPermission>"]) 
+		def update_group(group_id, properties)
+			msg = RequestMessage.new
+			msg.about_group(group_id, properties)
+			response  = request(:group_update, group_id, @headers, msg.to_s)
+			group_entry = GroupEntry.new(response.elements["entry"])
+		end
+
+		# Deletes a group in your domain.
+		# 	ex : 	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		myapps.delete_group("mygroup")
+		def delete_group(group_id)
+			response  = request(:group_delete,group_id,@headers)
+		end
+
+		# Returns a GroupEntry array for a particular member.
+                # The user parameter can be a complete email address or can be written without "@mydomain.com".
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		mylists = myapps.retrieve_groups('jsmith')   <= you could search from 'jsmith@mydomain.com' too
+		# 		mylists.each {|list| puts list.group_id }
+		def retrieve_groups(user)
+			xml_response = request(:groups_retrieve, user, @headers)
+			list_feed = Feed.new(xml_response.elements["feed"], GroupEntry) 
+			list_feed = add_next_feeds(list_feed, xml_response, GroupEntry)
+		end	  
+
+		# Returns a GroupEntry array for the whole domain.
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		all_lists = myapps.retrieve_all_groups
+		# 		all_lists.each {|list| puts list.group_id }
+		def retrieve_all_groups
+			xml_response = request(:all_groups_retrieve, nil, @headers)
+			list_feed = Feed.new(xml_response.elements["feed"], GroupEntry) 
+			list_feed = add_next_feeds(list_feed, xml_response, GroupEntry)
+		end
+	
+		# Adds an email address (user or group) to a mailing list in your domain and returns a MemberEntry instance.
+		# You can add addresses from other domains to your mailing list.  Omit "@mydomain.com" in the group name.
+		#	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		new_member = myapps.add_member_to_group('example@otherdomain.com', 'mygroup')
+		def add_member_to_group(email_address, group_id)
+			msg = RequestMessage.new
+			msg.about_member(email_address)
+			response  = request(:membership_add, group_id+'/member', @headers, msg.to_s)
+			member_entry = MemberEntry.new(response.elements["entry"])
+		end
+	
+		# Removes an email address (user or group) from a mailing list. Omit "@mydomain.com" in the group name.
+		# 	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		myapps.remove_member_from_group('example@otherdomain.com', 'mygroup')
+		def remove_member_from_group(email_address, group_id)
+			response  = request(:membership_remove, group_id+'/member/'+email_address,@headers)
+		end
+
+		# Returns true if the email address (user or group) is member of the group, false otherwise.
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		boolean = myapps.is_member('example@otherdomain.com', 'mylist')
+		def is_member(email_address, group_id)
+			xml_response = request(:membership_confirm, group_id+'/member/'+email_address, @headers)
+                        # if the email_address is not member of the group, an error is raised, otherwise true is returned 
+                        return true
+
+                        rescue GDataError => e
+                        return false if e.reason.eql?("EntityDoesNotExist")
+		end
+
+		# Returns a MemberEntry array with the members of a group.
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list = myapps.retrieve_all_members('mygroup')
+		# 		lists.each {|list| puts list.member_id }
+		def retrieve_all_members(group_id)
+			xml_response = request(:all_members_retrieve, group_id+'/member', @headers)
+			list_feed = Feed.new(xml_response.elements["feed"], MemberEntry)
+			list_feed = add_next_feeds(list_feed, xml_response, MemberEntry)
+		end
+	
+		# Adds a owner (user or group) to a mailing list in your domain and returns a OwnerEntry instance.
+		# You can add addresses from other domains to your mailing list.  Omit "@mydomain.com" in the group name.
+                # ATTENTION: a owner is added only if it's already member of the group, otherwise no action is done!
+		#	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		new_member = myapps.add_owner_to_group('example@otherdomain.com', 'mygroup')
+		def add_owner_to_group(email_address, group_id)
+			msg = RequestMessage.new
+			msg.about_owner(email_address)
+			response  = request(:ownership_add, group_id+'/owner', @headers, msg.to_s)
+			owner_entry = OwnerEntry.new(response.elements["entry"])
+		end
+	
+		# Removes an owner from a mailing list. Omit "@mydomain.com" in the group name.
+                # ATTENTION: when a owner is removed, it loses the privileges but still remains member of the group!
+		# 	ex :
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		myapps.remove_owner_from_group('example@otherdomain.com', 'mygroup')
+		def remove_owner_from_group(email_address, group_id)
+			response  = request(:ownership_remove, group_id+'/owner/'+email_address,@headers)
+		end
+
+		# Returns true if the email address (user or group) is owner of the group, false otherwise.
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		boolean = myapps.is_owner('example@otherdomain.com', 'mylist')
+		def is_owner(email_address, group_id)
+			xml_response = request(:ownership_confirm, group_id+'/owner/'+email_address, @headers)
+                        # if the email_address is not member of the group, an error is raised, otherwise true is returned 
+                        return true
+
+                        rescue GDataError => e
+                        return false if e.reason.eql?("EntityDoesNotExist")
+		end
+
+		# Returns a OwnerEntry array with the owners of a group.
+		# 	ex :	
+		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#		list = myapps.retrieve_all_owners('mygroup')
+		# 		lists.each {|list| puts list.owner_id }
+		def retrieve_all_owners(group_id)
+			xml_response = request(:all_owners_retrieve, group_id+'/owner', @headers)
+			list_feed = Feed.new(xml_response.elements["feed"], OwnerEntry)
+			list_feed = add_next_feeds(list_feed, xml_response, OwnerEntry)
+		end
+
+# NEW METHODS FOR GROUPS MANAGEMENT -->
+
 		
 		# Aliases
 		alias createUser create_user
@@ -445,7 +608,23 @@ module GAppsProvisioning #:nodoc:
 		alias retrieveAllRecipients retrieve_all_recipients
 		alias retrievePageOfRecipients retrieve_page_of_recipients
 		alias removeRecipientFromEmailList remove_address_from_email_list
-	
+	        
+# new aliases added for groups management
+                alias createGroup create_group
+                alias updateGroup update_group
+                alias deleteGroup delete_group
+                alias retrieveGroups retrieve_groups
+                alias retrieveAllGroups retrieve_all_groups
+                alias addMemberToGroup add_member_to_group
+                alias removeMemberFromGroup remove_member_from_group
+                alias isMember is_member
+                alias retrieveAllMembers retrieve_all_members
+                alias addOwnerToGroup add_owner_to_group
+                alias removeOwnerFromGroup remove_owner_from_group
+                alias isOwner is_owner
+                alias retrieveAllOwners retrieve_all_owners
+
+
 		# private methods
 		private #:nodoc:
 		
@@ -454,6 +633,9 @@ module GAppsProvisioning #:nodoc:
 			path_user = '/a/feeds/'+domain+'/user/2.0'
 			path_nickname = '/a/feeds/'+domain+'/nickname/2.0'
 			path_email_list = '/a/feeds/'+domain+'/emailList/2.0'
+
+			path_group = '/a/feeds/group/2.0/'+domain # path for Google groups
+
 			action = Hash.new
 			action[:domain_login] = {:method => 'POST', :path => '/accounts/ClientLogin' }
 			action[:user_create] = { :method => 'POST', :path => path_user }
@@ -473,6 +655,21 @@ module GAppsProvisioning #:nodoc:
 			action[:subscription_retrieve] = {:method => 'GET', :path =>path_email_list+'/'}
 			action[:subscription_add] = {:method => 'POST', :path =>path_email_list+'/'}
 			action[:subscription_remove] = {:method => 'DELETE', :path =>path_email_list+'/'}
+
+# new actions added for groups management
+			action[:group_create] = { :method => 'POST', :path =>path_group }
+			action[:group_update] = { :method => 'PUT', :path =>path_group+'/' }
+			action[:group_delete] = { :method => 'DELETE', :path =>path_group+'/' }
+			action[:groups_retrieve] = { :method => 'GET', :path =>path_group+'?member=' }
+			action[:all_groups_retrieve] = { :method => 'GET', :path =>path_group }
+			action[:membership_add] = { :method => 'POST', :path =>path_group+'/' }
+			action[:membership_remove] = { :method => 'DELETE', :path =>path_group+'/' }
+			action[:membership_confirm] = { :method => 'GET', :path =>path_group+'/' }
+			action[:all_members_retrieve] = { :method => 'GET', :path =>path_group+'/' }
+			action[:ownership_add] = { :method => 'POST', :path =>path_group+'/' }
+			action[:ownership_remove] = { :method => 'DELETE', :path =>path_group+'/' }
+			action[:ownership_confirm] = { :method => 'GET', :path =>path_group+'/' }
+			action[:all_owners_retrieve] = { :method => 'GET', :path =>path_group+'/' }
 	
 			# special action "next" for linked feed results. :path will be affected with URL received in a link tag.
 			action[:next] = {:method => 'GET', :path =>nil }
@@ -488,8 +685,8 @@ module GAppsProvisioning #:nodoc:
 		end
 	
 
-	# Completes the feed by following et requesting the URL links
-		def add_next_feeds(current_feed, xml_content,element_class)
+	        # Completes the feed by following et requesting the URL links
+		def add_next_feeds(current_feed, xml_content, element_class)
 			xml_content.elements.each("feed/link") {|link|
 			if link.attributes["rel"] == "next"
 				@action[:next] = {:method => 'GET', :path=> link.attributes["href"]}
@@ -624,6 +821,58 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
+# <-- NEW CLASSES FOR GROUPS MANAGEMENT
+
+	# GroupEntry object.
+	#
+	# Handles API responses relative to a group.
+	#
+	# Attributes :
+	#	group_id : string . The group_id is written without "@" and everything following.
+	class GroupEntry
+	attr_reader :group_id
+	
+		# GroupEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
+		entry.elements.each("apps:property"){ |e| @group_id = e.attributes["value"] if e.attributes["name"].eql?("groupId") }
+		end	
+	end
+
+
+	# MemberEntry object.
+	#
+	# Handles API responses relative to a meber of a group.
+	#
+	# Attributes :
+	#	member_id : string . The member_id is a complete email address.
+	class MemberEntry
+	attr_reader :member_id
+	
+		# MemberEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
+		entry.elements.each("apps:property"){ |e| @member_id = e.attributes["value"] if e.attributes["name"].eql?("memberId") }
+		end	
+	end
+
+
+	# OwnerEntry object.
+	#
+	# Handles API responses relative to a owner of a group.
+	#
+	# Attributes :
+	#	owner_id : string . The owner_id is a complete email address.
+	class OwnerEntry
+	attr_reader :owner_id
+	
+		# OwnerEntry constructor. Needs a REXML::Element <entry> as parameter
+		def initialize(entry) #:nodoc:
+		entry.elements.each("apps:property"){ |e| @owner_id = e.attributes["value"] if e.attributes["name"].eql?("email") }
+		end	
+	end
+
+# NEW CLASSES FOR GROUPS MANAGEMENT -->
+
+
 	class RequestMessage < Document #:nodoc:
 		# Request message constructor.
 		# parameter type : "user", "nickname" or "emailList"  
@@ -649,8 +898,33 @@ module GAppsProvisioning #:nodoc:
 			self.elements["atom:entry"].add_element "apps:emailList", {"name" => email_list } 
 		end
  
+
+# <-- NEW METHODS FOR GROUPS MANAGEMENT
+
+		# adds <apps:property> element in the message body.
+		def about_group(group_id, properties)
+			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#emailList")
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "groupId", "value" => group_id } 
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "groupName", "value" => properties[0] } 
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "description", "value" => properties[1] } 
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "emailPermission", "value" => properties[2] } 
+		end
+
+		def about_member(email_address)
+			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "memberId", "value" => email_address } 
+                end
+ 
+		def about_owner(email_address)
+			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "email", "value" => email_address } 
+                end
+
+# NEW METHODS FOR GROUPS MANAGEMENT -->
+
+
 		# adds <apps:login> element in the message body.
-		# warning :  if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
+		# warning: if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
 		# when needed to construct the message, should always been used before other "about_" methods so that the category tag can be overwritten
 		# only values permitted for hash_function_function_name : "SHA-1" or nil
 		def about_login(user_name, passwd=nil, hash_function_name=nil, admin=nil, suspended=nil, change_passwd_at_next_login=nil)
