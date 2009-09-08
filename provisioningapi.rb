@@ -468,11 +468,11 @@ module GAppsProvisioning #:nodoc:
 			response  = request(:group_delete,group_id,@headers)
 		end
 
-		# Returns a GroupEntry array for a particular member.
+		# Returns a GroupEntry array for a particular member of the domain (ATTENTION: it doesn't work for members of other domains!).
                 # The user parameter can be a complete email address or can be written without "@mydomain.com".
 		# 	ex :	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		mylists = myapps.retrieve_groups('jsmith')   <= you could search from 'jsmith@mydomain.com' too
+		#		mylists = myapps.retrieve_groups('jsmith')   # you can search for 'jsmith@mydomain.com' too
 		# 		mylists.each {|list| puts list.group_id }
 		def retrieve_groups(user)
 			xml_response = request(:groups_retrieve, user, @headers)
@@ -924,7 +924,7 @@ module GAppsProvisioning #:nodoc:
 
 
 		# adds <apps:login> element in the message body.
-		# warning: if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
+		# warning : if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
 		# when needed to construct the message, should always been used before other "about_" methods so that the category tag can be overwritten
 		# only values permitted for hash_function_function_name : "SHA-1" or nil
 		def about_login(user_name, passwd=nil, hash_function_name=nil, admin=nil, suspended=nil, change_passwd_at_next_login=nil)
