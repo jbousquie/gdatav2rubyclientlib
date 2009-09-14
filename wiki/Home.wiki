@@ -6,6 +6,7 @@
 
 release 1.1.0
   * Added group management (thanks to Roberto Cerigato)
+  * online documentation updated
 
 release 1.0.3
   * target URL 'www.google.com' changed to 'apps-apis.google.com' for the @@google_host class var, according to http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html
