@@ -1,9 +1,9 @@
 #!/usr/bin/ruby
 	# == Google Apps Provisioning API client library
 	#
-	# This library allows you to manage your domain (accounts, mailing lists, aliases) within your Ruby code.
+	# This library allows you to manage your domain (accounts, email lists, aliases) within your Ruby code.
 	# It's based on the GDATA provisioning API v2.0.
-	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html
+	# Reference : http://code.google.com/apis/apps/gdata_provisioning_api_v2.0_reference.html.
 	#
 	# All the public methods with _ruby_style_ names are aliased with _javaStyle_ names. Ex : create_user and createUser.
 	#
@@ -15,9 +15,9 @@
 	#	require 'gappsprovisioning/provisioningapi'
 	#	include GAppsProvisioning
 	#	adminuser = "root@mydomain.com"
-	#	password  = "PaSsWoRd!"
+	#	password  = "PaSsWo4d!"
 	#	myapps = ProvisioningApi.new(adminuser,password)	
-	#	(see examples in ProvisioningApi.new documentation for handling proxies)
+	#	(see examples in  ProvisioningApi.new documentation for handling proxies)
 	#
 	#	new_user = myapps.create_user("jsmith", "john", "smith", "secret", nil, "2048")
 	#	puts new_user.family_name
@@ -32,6 +32,13 @@
 	#
 	#  	new_nickname = myapps.create_nickname("jsmith", "john.smith")
 	#
+	# Want to manage groups ? (i.e. mailing lists)
+	#
+	#     new_group = myapps.create_group("sales-dep", ['Sales Departement'])
+	#     new_member = myapps.add_member_to_group("jsmith", "sales-dep")
+	#     new_owner = myapps.add_owner_to_group("jsmith", "sales-dep")
+	#     (ATTENTION: an owner is added only if it's already member of the group!)
+	#
 	# Want to handle errors ?
 	#
 	#	begin
@@ -42,21 +49,14 @@
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-	# Email lists ? (deprecated)
+	# Email lists (deprecated) ?
 	#
-	# 	new_list = myapps.create_email_list("sale-dep")
-	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
-        #
-	# Groups ? (i.e. mailing lists)
-	#
-	# 	new_group = myapps.create_group("mygroup")
-	# 	new_member = myapps.add_member_to_group("mygroup", "user@mydomain.com")
-	# 	new_owner = myapps.add_owner_to_group("mygroup", "user@mydomain.com")
-        #               (ATTENTION: a owner is added only if it's already member of the group!)
+	# 	new_list = myapps.create_email_list("sales-dep")
+	# 	new_address = myapps.add_address_to_email_list("sales-dep", "bibi@ruby-forge.org")
 	#
         # All methods described in the GAppsProvisioning::ProvisioningApi class documentation.
         #
-	# Author :: Jérôme Bousquié
+	# Author :: Jérôme Bousquié, Roberto Cerigato
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
 #
@@ -434,10 +434,7 @@ module GAppsProvisioning #:nodoc:
 		def remove_address_from_email_list(address,email_list)
 			response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
 		end
-                
-
-# <-- NEW METHODS FOR GROUPS MANAGEMENT
-
+               
 		# Creates a group in your domain and returns a GroupEntry (ATTENTION: the group name is necessary!).
 		# 	ex : 	
 		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
@@ -580,10 +577,7 @@ module GAppsProvisioning #:nodoc:
 			list_feed = Feed.new(xml_response.elements["feed"], OwnerEntry)
 			list_feed = add_next_feeds(list_feed, xml_response, OwnerEntry)
 		end
-
-# NEW METHODS FOR GROUPS MANAGEMENT -->
-
-		
+	
 		# Aliases
 		alias createUser create_user
 		alias retrieveUser retrieve_user
@@ -607,9 +601,7 @@ module GAppsProvisioning #:nodoc:
 		alias addRecipientToEmailList add_address_to_email_list
 		alias retrieveAllRecipients retrieve_all_recipients
 		alias retrievePageOfRecipients retrieve_page_of_recipients
-		alias removeRecipientFromEmailList remove_address_from_email_list
-	        
-# new aliases added for groups management
+		alias removeRecipientFromEmailList remove_address_from_email_list        
                 alias createGroup create_group
                 alias updateGroup update_group
                 alias deleteGroup delete_group
