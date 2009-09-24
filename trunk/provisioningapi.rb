@@ -56,7 +56,7 @@
 	#
         # All methods described in the GAppsProvisioning::ProvisioningApi class documentation.
         #
-	# Author :: Jérôme Bousquié, Roberto Cerigato
+	# Authors :: Jérôme Bousquié, Roberto Cerigato
 	# Ruby version :: from 1.8.6
 	# Licence :: Apache Licence, version 2
 #
@@ -225,7 +225,7 @@ module GAppsProvisioning #:nodoc:
 		#			username is required and can't be updated.
 		#			given_name and family_name are required, may be updated.
 		#			if set to nil, every other parameter won't update the attribute.
-		#				passwd_hash_function :  string "SHA-1" or nil (default)
+		#				passwd_hash_function :  string "SHA-1", "MD5" or nil (default)
 		#				admin :  string "true" or string "false" or nil (no boolean : true or false). 
 		#				suspended :  string "true" or string "false" or nil (no boolean : true or false)
 		#				change_passwd :  string "true" or string "false" or nil (no boolean : true or false)
@@ -338,101 +338,49 @@ module GAppsProvisioning #:nodoc:
 			nicknames_feed = Feed.new(xml_response.elements["feed"],  NicknameEntry)
 		end
 	
-		# Returns an EmailListEntry array from an email adress
-		# 	ex :	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		mylists = myapps.retrieve_email_lists('jsmith')   <= you could search from 'jsmith@mydomain.com' too 
-		# 		mylists.each {|list| puts list.email_list }
+		# Deprecated. Please use Group management instead.
 		def retrieve_email_lists(email_adress)
-			xml_response = request(:email_list_retrieve_for_an_email, email_adress, @headers)
-			email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
-			email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
+			puts("retrieve_email_lists : deprecated. Please use Group management instead.")
 		end	  
 	
-		# Returns an EmailListEntry array for the whole domain
-		# 	ex :	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		all_lists = myapps.retrieve_all_email_lists
-		# 		all_lists.each {|list| puts list.email_list }
+		# Deprecated. Please use Group management instead.
 		def retrieve_all_email_lists
-			xml_response = request(:email_list_retrieve_in_domain, nil, @headers)
-			email_list_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry) 
-			email_list_feed = add_next_feeds(email_list_feed, xml_response, EmailListEntry)
+			puts("retrieve_all_email_lists : deprecated. Please use Group management instead.")
 		end
 	
-		# Returns an EmailListEntry array populated with 100 email lists, starting from an email list name.
-		# Starting email list name must be written "mylist", not "mylist@mydomain.com". Omit "@mydomain.com".
-		# 	ex : 	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		list= myapps.retrieve_page_of_email_lists("mylist") 
-		#  		list.each{ |entry| puts entry.email_list}
+		# Deprecated. Please use Group management instead.
 		def retrieve_page_of_email_lists(start_listname)
-			param='?startEmailListName='+start_listname
-			xml_response = request(:email_list_retrieve_in_domain, param, @headers)
-			nicknames_feed = Feed.new(xml_response.elements["feed"],  EmailListEntry)
+			puts("retrieve_page_of_email_lists : deprecated. Please use Group management instead.")
 		end
 		
-		# Creates an email list in your domain and returns an EmailListEntry
-		# 	ex : 	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		list= myapps.create_email_lists("mylist") 
+		# Deprecated. Please use Group management instead.
 		def create_email_list(name)
-			msg = RequestMessage.new
-			msg.about_email_list(name)
-			response  = request(:email_list_create,nil,@headers, msg.to_s)
-			email_list_entry = EmailListEntry.new(response.elements["entry"])
+			puts("create_email_list : deprecated. Please use Group management instead.")
 		end
 
-		# Deletes an email list in your domain. Omit "@mydomain.com" in the email list name.
-		# 	ex : 	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		myapps.delete_email_lists("mylist")
+		# Deprecated. Please use Group management instead.
 		def delete_email_list(name)
-			response  = request(:email_list_delete,name,@headers)
+			puts("delete_email_list : deprecated. Please use Group management instead.")
 		end
 	
-		# Returns an EmailListRecipientEntry array for an email list. 
-		# 	ex :	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		recipients = myapps.retrieve_all_recipients('mylist')  <= do not write "mylist@mydomain.com", write "mylist" only.
-		# 		recipients.each {|recipient| puts recipient.email }
+		# Deprecated. Please use Group management instead.
 		def retrieve_all_recipients(email_list)
-			param = email_list+'/recipient/'
-			xml_response = request(:subscription_retrieve, param, @headers)
-			email_list_recipient_feed = Feed.new(xml_response.elements["feed"],  EmailListRecipientEntry) 
-			email_list_recipient_feed = add_next_feeds(email_list_recipient_feed, xml_response, EmailListRecipientEntry)
+			puts("retrieve_all_recipients : deprecated. Please use Group management instead.")
 		end
 	
-		# Returns an EmailListRecipientEntry Array populated with 100 recipients from an email list, starting from a recipient name.  Omit "@mydomain.com" in the email list name.
-		# 	ex : 	
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		list= myapps.retrieve_page_of_recipients('mylist', 'jsmith') 
-		#  		list.each{ |recipient| puts recipient.email}
+		# Deprecated. Please use Group management instead.
 		def retrieve_page_of_recipients(email_list, start_recipient)
-			param = email_list+'/recipient/?startRecipient='+start_recipient
-			xml_response = request(:subscription_retrieve, param, @headers)
-			recipients_feed = Feed.new(xml_response.elements["feed"], EmailListRecipientEntry)
+			puts("Deprecated. Please use Group management instead.")
 		end
 	
-		# Adds an email address to an email list in your domain and returns an EmailListRecipientEntry instance.
-		# You can add addresses from other domains to your email list.  Omit "@mydomain.com" in the email list name.
-		#	ex :
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		new_address = myapps.add_address_to_email_list('mylist', 'foo@otherdomain.com')
+		# Deprecated. Please use Group management instead.
 		def add_address_to_email_list(email_list,address)
-			msg = RequestMessage.new
-			msg.about_email_list(email_list)
-			msg.about_who(address)
-			response  = request(:subscription_add, email_list+'/recipient/',@headers, msg.to_s)
-			email_list_recipient_entry = EmailListRecipientEntry.new(response.elements["entry"])
+			puts("add_address_to_email_list : deprecated. Please use Group management instead.")
 		end
 	
-		# Removes an address from an email list.
-		# 	ex :
-		#		myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
-		#		myapps.remove_address_from_email_list('foo@otherdomain.com', 'mylist')
+		# Deprecated. Please use Group management instead.
 		def remove_address_from_email_list(address,email_list)
-			response  = request(:subscription_remove, email_list+'/recipient/'+address,@headers)
+			puts("remove_address_from_email_list : deprecated. Please use Group management instead.")
 		end
                
 		# Creates a group in your domain and returns a GroupEntry (ATTENTION: the group name is necessary!).
@@ -593,12 +541,6 @@ module GAppsProvisioning #:nodoc:
 		alias retrieveAllNicknames retrieve_all_nicknames
 		alias retrievePageOfNicknames retrieve_page_of_nicknames
 		alias deleteNickname delete_nickname
-		alias createEmailList create_email_list
-		alias retrieveEmailLists retrieve_email_lists
-		alias retrieveAllEmailLists retrieve_all_email_lists
-		alias retrievePageOfEmailLists retrieve_page_of_email_lists
-		alias deleteEmailList delete_email_list
-		alias addRecipientToEmailList add_address_to_email_list
 		alias retrieveAllRecipients retrieve_all_recipients
 		alias retrievePageOfRecipients retrieve_page_of_recipients
 		alias removeRecipientFromEmailList remove_address_from_email_list        
@@ -624,8 +566,6 @@ module GAppsProvisioning #:nodoc:
 		def setup_actions(domain)
 			path_user = '/a/feeds/'+domain+'/user/2.0'
 			path_nickname = '/a/feeds/'+domain+'/nickname/2.0'
-			path_email_list = '/a/feeds/'+domain+'/emailList/2.0'
-
 			path_group = '/a/feeds/group/2.0/'+domain # path for Google groups
 
 			action = Hash.new
@@ -634,21 +574,13 @@ module GAppsProvisioning #:nodoc:
 			action[:user_retrieve] = { :method => 'GET', :path => path_user+'/' }
 			action[:user_retrieve_all] = { :method => 'GET', :path => path_user } 
 			action[:user_update] = { :method => 'PUT', :path => path_user +'/' }
+			action[:user_rename] = { :method => 'PUT', :path => path_user +'/' }
 			action[:user_delete] = { :method => 'DELETE', :path => path_user +'/' }
 			action[:nickname_create] = { :method => 'POST', :path =>path_nickname }
 			action[:nickname_retrieve] = { :method => 'GET', :path =>path_nickname+'/' }
 			action[:nickname_retrieve_all_for_user] = { :method => 'GET', :path =>path_nickname+'?username=' }
 			action[:nickname_retrieve_all_in_domain] = { :method => 'GET', :path =>path_nickname }
 			action[:nickname_delete] = { :method => 'DELETE', :path =>path_nickname+'/' }
-			action[:email_list_retrieve_for_an_email] = { :method => 'GET', :path =>path_email_list+'?recipient=' }
-			action[:email_list_retrieve_in_domain] = { :method => 'GET', :path =>path_email_list }
-			action[:email_list_create] = { :method => 'POST', :path =>path_email_list }
-			action[:email_list_delete] = { :method => 'DELETE', :path =>path_email_list+'/' }
-			action[:subscription_retrieve] = {:method => 'GET', :path =>path_email_list+'/'}
-			action[:subscription_add] = {:method => 'POST', :path =>path_email_list+'/'}
-			action[:subscription_remove] = {:method => 'DELETE', :path =>path_email_list+'/'}
-
-# new actions added for groups management
 			action[:group_create] = { :method => 'POST', :path =>path_group }
 			action[:group_update] = { :method => 'PUT', :path =>path_group+'/' }
 			action[:group_delete] = { :method => 'DELETE', :path =>path_group+'/' }
@@ -673,7 +605,7 @@ module GAppsProvisioning #:nodoc:
 			request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
 			res = request(:domain_login, nil, {'Content-Type'=>'application/x-www-form-urlencoded'}, request_body)
 			return /^Auth=(.+)$/.match(res.to_s)[1]
-			# res.to_s needed, because res.class = REXML::Document
+			# res.to_s needed, because res.class is REXML::Document
 		end
 	
 
@@ -733,7 +665,7 @@ module GAppsProvisioning #:nodoc:
 	#	change_password_at_next_login : string "true" or string "false"
 	#	agreed_to_terms : string "true" or string "false"
 	#	quota_limit : string (value in MB)
-	class UserEntry 
+	class UserEntry  
 	attr_reader :given_name, :family_name, :username, :suspended, :ip_whitelisted, :admin, :change_password_at_next_login, :agreed_to_terms, :quota_limit
 	
 		# UserEntry constructor. Needs a REXML::Element <entry> as parameter
@@ -769,38 +701,6 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
-	# EmailListEntry object.
-	#
-	# Handles API responses relative to an email list.
-	#
-	# Attributes :
-	#	email_list : string . The email list name is written without "@" and everything following.
-	class EmailListEntry 
-	attr_reader :email_list
-	
-		# EmailListEntry constructor. Needs a REXML::Element <entry> as parameter
-		def initialize(entry) #:nodoc:
-		@email_list = entry.elements["apps:emailList"].attributes["name"]
-		end	
-	end
-
-
-	# EmailListRecipientEntry object.
-	#
-	# Handles API responses relative to a recipient.
-	#
-	# Attributes :
-	#	email : string
-	class EmailListRecipientEntry 
-	attr_reader :email
-	
-		# EmailListEntry constructor. Needs a REXML::Element <entry> as parameter
-		def initialize(entry) #:nodoc:
-		@email = entry.elements["gd:who"].attributes["email"]
-		end	
-	end
-
-
 	# UserFeed object : Array populated with Element_class objects (UserEntry, NicknameEntry, EmailListEntry or EmailListRecipientEntry)
 	class Feed < Array #:nodoc:
 	
@@ -813,7 +713,6 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
-# <-- NEW CLASSES FOR GROUPS MANAGEMENT
 
 	# GroupEntry object.
 	#
@@ -862,8 +761,6 @@ module GAppsProvisioning #:nodoc:
 		end	
 	end
 
-# NEW CLASSES FOR GROUPS MANAGEMENT -->
-
 
 	class RequestMessage < Document #:nodoc:
 		# Request message constructor.
@@ -890,10 +787,7 @@ module GAppsProvisioning #:nodoc:
 			self.elements["atom:entry"].add_element "apps:emailList", {"name" => email_list } 
 		end
  
-
-# <-- NEW METHODS FOR GROUPS MANAGEMENT
-
-		# adds <apps:property> element in the message body.
+		# adds <apps:property> element in the message body for a group.
 		def about_group(group_id, properties)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#emailList")
 			self.elements["atom:entry"].add_element "apps:property", {"name" => "groupId", "value" => group_id } 
@@ -902,23 +796,23 @@ module GAppsProvisioning #:nodoc:
 			self.elements["atom:entry"].add_element "apps:property", {"name" => "emailPermission", "value" => properties[2] } 
 		end
 
+		# adds <apps:property> element in the message body for a member.
 		def about_member(email_address)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
 			self.elements["atom:entry"].add_element "apps:property", {"name" => "memberId", "value" => email_address } 
                 end
  
+		# adds <apps:property> element in the message body for an owner.
 		def about_owner(email_address)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
 			self.elements["atom:entry"].add_element "apps:property", {"name" => "email", "value" => email_address } 
                 end
 
-# NEW METHODS FOR GROUPS MANAGEMENT -->
-
 
 		# adds <apps:login> element in the message body.
 		# warning : if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
 		# when needed to construct the message, should always been used before other "about_" methods so that the category tag can be overwritten
-		# only values permitted for hash_function_function_name : "SHA-1" or nil
+		# only values permitted for hash_function_function_name : "SHA-1", "MD5" or nil
 		def about_login(user_name, passwd=nil, hash_function_name=nil, admin=nil, suspended=nil, change_passwd_at_next_login=nil)
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
 			self.elements["atom:entry"].add_element "apps:login", {"userName" => user_name } 
