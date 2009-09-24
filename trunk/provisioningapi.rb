@@ -243,6 +243,25 @@ module GAppsProvisioning #:nodoc:
 			response  = request(:user_update,username,@headers, msg.to_s)
 			user_entry = UserEntry.new(response.elements["entry"])
 		end
+		
+		# Renames a user, returns a UserEntry instance
+		#		ex :
+		#
+		#			myapps = ProvisioningApi.new('root@mydomain.com','PaSsWoRd')
+		#			user = myapps.rename_user('jsmith','jdoe')
+		#
+		#		It is recommended to log out rhe user from all browser sessions and service before renaming.
+		#              Once renamed, the old username becomes a nickname of the new username.
+		#		Note from Google: Google Talk will lose all remembered chat invitations after renaming. 
+		#		The user must request permission to chat with friends again. 
+		# 		Also, when a user is renamed, the old username is retained as a nickname to ensure continuous mail delivery in the case of email forwarding settings. 
+		#		To remove the nickname, you should issue an HTTP DELETE to the nicknames feed after renaming.
+		def rename_user(username, new_username)
+			msg = RequestMessage.new
+			msg.about_login(new_username)
+			msg.add_path('https://'+@@google_host+@action[:user_rename][:path]+username)
+			response  = request(:user_update,username,@headers, msg.to_s)
+		end
 	
 		# Suspends an account in your domain, returns a UserEntry instance
 		#		ex :
