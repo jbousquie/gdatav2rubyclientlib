@@ -551,6 +551,7 @@ module GAppsProvisioning #:nodoc:
 		alias retrieveAllUsers retrieve_all_users
 		alias retrievePageOfUsers retrieve_page_of_users
 		alias updateUser update_user
+		alias renameUser rename_user
 		alias suspendUser suspend_user
 		alias restoreUser restore_user
 		alias deleteUser delete_user
