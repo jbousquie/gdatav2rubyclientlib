@@ -106,6 +106,15 @@ module GAppsProvisioning #:nodoc:
 	#
 	#  	new_nickname = myapps.create_nickname("jsmith", "john.smith")
 	#
+	# Want to manage groups ? (i.e. mailing lists)
+	#
+	# 	new_group = myapps.create_group("sales-dep", ['Sales Departement'])
+	# 	new_member1 = myapps.add_member_to_group("john.doe@somedomain.com", "sales-dep")
+	# 	new_member2 = myapps.add_member_to_group("jsmith", "sales-dep")
+	# 	new_owner = myapps.add_owner_to_group("jsmith", "sales-dep")
+        #               (ATTENTION: an owner is added only if it's already member of the group!)
+        #
+	#
 	# Want to handle errors ?
 	#
 	#	begin
@@ -116,18 +125,8 @@ module GAppsProvisioning #:nodoc:
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-	# Email lists ? (deprecated)
-	#
-	# 	new_list = myapps.create_email_list("sale-dep")
-	# 	new_address = myapps.add_address_to_email_list("sale-dep", "bibi@ruby-forge.org")
         #
-	# Groups ? (i.e. mailing lists)
-	#
-	# 	new_group = myapps.create_group("mygroup")
-	# 	new_member = myapps.add_member_to_group("mygroup", "user@mydomain.com")
-	# 	new_owner = myapps.add_owner_to_group("mygroup", "user@mydomain.com")
-        #               (ATTENTION: a owner is added only if it's already member of the group!)
-        #
+
 
 
 	class ProvisioningApi
