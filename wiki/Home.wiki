@@ -4,6 +4,11 @@
 
 ==Changelog==
 
+release 1.2.0
+  * Added renaming username
+  * Email list methods deprecated
+  * online and embedded documentations updated
+
 release 1.1.0
   * Added group management (thanks to Roberto Cerigato)
   * online documentation updated
