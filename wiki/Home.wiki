@@ -1,6 +1,6 @@
 =Ruby Client Library for Google Apps Provisioning API=
 
-[http://personnel.univ-reunion.fr/bousquie/ruby/gappsprovisioning/doc/ On-line documentation]
+[http://www.iut-rodez.fr/gappsprovisioning/doc/ On-line documentation]
 
 ==Changelog==
 
