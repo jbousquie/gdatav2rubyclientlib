@@ -125,7 +125,6 @@ module GAppsProvisioning #:nodoc:
 	#		puts "errorcode = " +e.code, "input : "+e.input, "reason : "+e.reason
 	#	end
 	#
-        #
 
 
 
@@ -160,11 +159,14 @@ module GAppsProvisioning #:nodoc:
 			conn = Connection.new(@@google_host, @@google_port, proxy, proxy_port, proxy_user, proxy_passwd)
 			@connection = conn
 			@token = login(mail, passwd)
-			@headers = {'Content-Type'=>'application/atom+xml', 'Authorization'=> 'GoogleLogin auth='+token}
-			return @connection
+                        if @token.nil?
+                                error = LoginError.new
+                                error.msg = "Authentication failed! Wrong username or password"
+                                raise error
+                        end
+       			@headers = {'Content-Type'=>'application/atom+xml', 'Authorization'=> 'GoogleLogin auth='+token}
+        		return @connection
 		end
-	
-		
 	
 		# Returns a UserEntry instance from a username
 		# 	ex :	
@@ -623,10 +625,13 @@ module GAppsProvisioning #:nodoc:
 		def login(mail, passwd)
 			request_body = '&Email='+CGI.escape(mail)+'&Passwd='+CGI.escape(passwd)+'&accountType=HOSTED&service=apps'
 			res = request(:domain_login, nil, {'Content-Type'=>'application/x-www-form-urlencoded'}, request_body)
-			return /^Auth=(.+)$/.match(res.to_s)[1]
-			# res.to_s needed, because res.class is REXML::Document
+                        auth = /^Auth=(.+)$/.match(res.to_s) # res.to_s needed, because res.class is REXML::Document
+                        if auth.nil?
+                                return nil
+                        else
+        			return auth[1]
+                        end
 		end
-	
 
 	        # Completes the feed by following et requesting the URL links
 		def add_next_feeds(current_feed, xml_content, element_class)
@@ -732,7 +737,6 @@ module GAppsProvisioning #:nodoc:
 	end
 
 
-
 	# GroupEntry object.
 	#
 	# Handles API responses relative to a group.
@@ -826,7 +830,6 @@ module GAppsProvisioning #:nodoc:
 			self.elements["atom:entry/atom:category"].add_attribute("term", "http://schemas.google.com/apps/2006#user")
 			self.elements["atom:entry"].add_element "apps:property", {"name" => "email", "value" => email_address } 
                 end
-
 
 		# adds <apps:login> element in the message body.
 		# warning : if valued admin, suspended, or change_passwd_at_next_login must be the STRINGS "true" or "false", not the boolean true or false
