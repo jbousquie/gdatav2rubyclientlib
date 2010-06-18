@@ -545,6 +545,24 @@ module GAppsProvisioning #:nodoc:
 			list_feed = Feed.new(xml_response.elements["feed"], OwnerEntry)
 			list_feed = add_next_feeds(list_feed, xml_response, OwnerEntry)
 		end
+
+		# Creates an email setting for forwarding messages
+		#   forwarding = myapps.create_email_forwarding('jsmith','jsmith@yahoo.com','KEEP')
+	    	#   Various options include: "KEEP" (in inbox), "ARCHIVE", or "DELETE" (send to trash)
+		#   Beware of API restrictions as mentioned here : http://googleappsupdates.blogspot.com/2010/05/gmail-now-requires-verification-of.html
+		def create_email_forwarding(username,email,action)
+		      msg = RequestMessage.new
+		      msg.about_forwarding(email,action)
+		      response = request(:email_forwarding_create,"#{username}/forwarding",@headers,msg.to_s)
+		end
+
+		# Disable email forwarding for a user
+		#   forwarding = myapps.disable_email_forwarding('jsmith')
+		def disable_email_forwarding(username)
+		      msg = RequestMessage.new
+		      msg.disable_forwarding
+		      response = request(:email_forwarding_create,"#{username}/forwarding",@headers,msg.to_s)
+		end
 	
 		# Aliases
 		alias createUser create_user
@@ -588,6 +606,7 @@ module GAppsProvisioning #:nodoc:
 			path_user = '/a/feeds/'+domain+'/user/2.0'
 			path_nickname = '/a/feeds/'+domain+'/nickname/2.0'
 			path_group = '/a/feeds/group/2.0/'+domain # path for Google groups
+			path_email_setting = '/a/feeds/emailsettings/2.0/'+domain
 
 			action = Hash.new
 			action[:domain_login] = {:method => 'POST', :path => '/accounts/ClientLogin' }
@@ -615,6 +634,7 @@ module GAppsProvisioning #:nodoc:
 			action[:ownership_remove] = { :method => 'DELETE', :path =>path_group+'/' }
 			action[:ownership_confirm] = { :method => 'GET', :path =>path_group+'/' }
 			action[:all_owners_retrieve] = { :method => 'GET', :path =>path_group+'/' }
+			action[:email_forwarding_create] = {:method => "PUT",  :path=>path_email_setting+'/'}
 	
 			# special action "next" for linked feed results. :path will be affected with URL received in a link tag.
 			action[:next] = {:method => 'GET', :path =>nil }
@@ -870,6 +890,19 @@ module GAppsProvisioning #:nodoc:
 		def about_who(email)
 			self.elements["atom:entry"].add_element "gd:who", {"email" => email } 
 			return self
+		end
+
+		def about_forwarding(email,action)
+			self.elements["atom:entry"].delete_element "atom:category"
+		        self.elements["atom:entry"].add_element "apps:property", {"name" => "enable", "value" => "true"}
+			self.elements["atom:entry"].add_element "apps:property", {"name" => "forwardTo", "value" => email}
+		  	self.elements["atom:entry"].add_element "apps:property", {"name" => "action", "value" => action}
+		  	return self
+		end
+		
+		def disable_forwarding
+		      	self.elements["atom:entry"].delete_element "atom:category"
+		  	self.elements["atom:entry"].add_element "apps:property", {"name" => "enable", "value" => "false"}
 		end
 		
 	end
