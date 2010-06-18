@@ -28,6 +28,17 @@ rescue
 GOOGLE_APPS_CONFIG['password'])
 end
 }}}
+==Tip for JRuby==
+
+install jruby-openssl and declares where to find certs files:
+{{{
+jruby -S gem install jruby-openssl
+export SSL_CERT_DIR=/etc/ssl/certs/   (for example on Ubuntu)
+}}}
+then run your script as in MRI :
+{{{
+jruby myscript_using_clientlib.rb
+}}}
 ==Changelog==
 
 release 1.2.0
